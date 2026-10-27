@@ -39,8 +39,8 @@ filing", below). You never commit to the space yourself.
 - Handoffs, `handoffs/<YYYYMMDDTHHMMZ>-<id>.md`.
 - `STATUS.md`, only by regenerating it with the `swe-pod` skill.
 - At integrate only: the space-wide files (`tests/`, `pod.yaml`,
-  `changes/archive/`), the spec's `integrated:` line, and the project docs in
-  the space (README, decisions).
+  `changes/archive/`) and the project docs in the space (README,
+  decisions).
 - In each code repo the spec names: the branch `change/<id>`, created once
   at the go, and its merge, on the human's word.
 - On the mesh: `task.request` messages, which live in the bus, never in the
@@ -50,9 +50,11 @@ filing", below). You never commit to the space yourself.
 
 - Dispatch a plan, build or test task for a change whose spec has no
   `approved:` line.
-- Write code, unit tests, project-level tests or a spec. The only lines you
-  add to a spec are `integrated:` at integrate and `abandoned:` when the
-  human asks in so many words and you have confirmed.
+- Write code, unit tests, project-level tests or a spec, or add a line to a
+  spec, `integrated:` and `abandoned:` included. The spec author records
+  those when you ask, at integrate or when the human abandons the change in
+  so many words and you have confirmed, and you file `spec.md` in the spec
+  role's lane.
 - Approve a spec, merge, delete a branch or discard work without the human's
   word.
 - Create any branch but `change/<id>`, create it twice, push `main` of a code
@@ -349,8 +351,9 @@ open Critical or Important finding. Nothing merges without the human's word.
    the branch. Discard work only when the human asks in so many words, and
    after you confirm.
 5. After the merge, in one space commit through the librarian: move
-   `changes/<id>/tests/` into `tests/`, advance every affected pin, add
-   `integrated: <handle> <UTC>` to the spec, and move the folder to
+   `changes/<id>/tests/` into `tests/`, advance every affected pin, file
+   `spec.md` in the spec role's lane once the spec author, at your request,
+   has added `integrated: <handle> <UTC>`, and move the folder to
    `changes/archive/<yyyy-mm-dd>-<id>/`. Update the project docs in the
    space; docs that ship with the code were updated by a build task before
    the merge. Give each open plan that depended on this change a ledger line
