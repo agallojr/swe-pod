@@ -685,12 +685,13 @@ goes. Machine paths never go in a brief. Each role's definition is
   `changes/<id>/evidence/`. Refuse to file anything else, and record
   `refused <space path>: lane line <n>`.
 - **Ordering.** Dispatch a task once every task in its `after` list is done,
-  its review included, so independent tasks run in parallel. On the mesh
-  this is a workflow you drive (PROTOCOL §8.1), and its record lives in the
-  bus. Mesh workflows do not yet take steps with `after` lists (PROTOCOL
-  §8.1 advances one cursor), so until they do, follow the interim rule:
-  each cycle, the lead dispatches every task whose `after` tasks are all
-  done.
+  its review included, so independent tasks run in parallel. In a review
+  task, `after: [T<k>]` means T<k> has reported and its commit exists; T<k>
+  is done only when that review closes. On the mesh this is a workflow you
+  drive (PROTOCOL §8.1), and its record lives in the bus. Mesh workflows do
+  not yet take steps with `after` lists (PROTOCOL §8.1 advances one cursor),
+  so until they do, follow the interim rule: each cycle, the lead dispatches
+  every task whose `after` tasks are all done.
 - **What the space records.** Record each dispatch as
   `dispatch T<n> -> <role> (<local|mesh>, <env class|any>)[, base <repo> <sha7>]`.
   The line names the role, `local` or `mesh`, and the environment class, and
