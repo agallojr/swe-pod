@@ -49,7 +49,8 @@ Nothing else.
 - Create a branch, push any branch but `change/<id>`, touch `main`, or
   force-push.
 - Stage or commit a file outside your `touches:`. Other builders may share
-  your checkout and your branch; never stage their files.
+  your checkout and your branch; never stage, stash, reset or restore their
+  files.
 - Commit or push in the Project Space. The lead files your report.
 - Put a value the code computed into the "for the tester" part of a test
   suggestion.
@@ -114,16 +115,31 @@ A report at the brief's result path, in the report format
          --trailer "Change: <id>" --trailer "Task: T<n>" -- <touches>
 
 7. Rebase onto the remote `change/<id>` before pushing, then push only that
-   branch:
+   branch. Run these in order, each on its own:
 
-       git pull --rebase origin change/<id>
+       git fetch origin change/<id>
+       git merge-base --is-ancestor origin/change/<id> HEAD
+       git status --porcelain --untracked-files=no
+       git rebase --no-autostash origin/change/<id>
        git push origin change/<id>
 
-   If `change/<id>` does not exist, stop and report `BLOCKED`: the lead
-   creates it at the go, and you never create a branch. A rebase conflict
-   means the plan's claim that your task is independent was wrong: run
-   `git rebase --abort`, leave the conflict unresolved, and report `BLOCKED`
-   naming the conflicting files.
+   If the merge-base check exits 0, the remote head is already in your
+   branch and a rebase would change nothing: skip the status check and the
+   rebase, and push. Otherwise rebase first. A rebase needs a clean tree, so
+   run the status check. A file it lists is another task's work in progress
+   in the shared checkout: never stash, reset, restore, check out, stage or
+   commit it. Wait for its builder to commit, then start again from the
+   fetch. If the push is rejected, wait and start again from the fetch.
+   After three tries, report `BLOCKED` naming the files or the rejection.
+   Do not use `git pull --rebase` instead: git refuses it whenever the index
+   or a tracked file holds changes, even with nothing to rebase, and with
+   `rebase.autoStash` set it stashes other tasks' files.
+
+   If `change/<id>` does not exist (the fetch finds no such ref), stop and
+   report `BLOCKED`: the lead creates it at the go, and you never create a
+   branch. A rebase conflict means the plan's claim that your task is
+   independent was wrong: run `git rebase --abort`, leave the conflict
+   unresolved, and report `BLOCKED` naming the conflicting files.
 8. If a project-level test looks wrong, check it against the spec clause it
    tests. Leave the test unchanged, and report `DONE_WITH_CONCERNS` with the
    `Disputed test:` line in `## Concerns`.
