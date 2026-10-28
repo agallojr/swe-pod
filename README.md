@@ -155,6 +155,8 @@ Project Space in the bus by hand, under `<bus>/spaces/`, and lists it in
   heavy, 60 s or less is not, whatever its cap, its label or the task's total
   time. A check that records no expected run time, such as a unit suite or a
   declared quality check, takes it from its brief or from the record of its
-  last run; with neither, the lead treats it as heavy and asks. With you
-  present, the lead first gives you the command, the caps and the expected
-  wall time in s of each heavy check, and of no other check.
+  last run when either gives one, and is heavy only when that time is over
+  60 s. With no known time, the lead does not ask you about it, and the
+  running agent's own fence still binds the run. With you present, the lead
+  first gives you the command, the caps and the expected wall time in s of
+  each heavy check, and of no other check.
