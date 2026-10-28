@@ -198,16 +198,22 @@ lists are done:
 
 1. Write one brief per shard, from its own plan entry. Its `## Task` also
    lists the tests or files that shard runs or touches. When the plan
-   leaves the split to you, make it now, by the plan's rule.
+   leaves the split to you, make it now, by the plan's rule. Its
+   `## Start from` names the commit set under test as far as it is known
+   when you write it: each branch head by sha, and the newest space commit
+   that changed `changes/<id>/tests/` or `tests/`, by sha.
 2. Record one dispatch line per shard, as in step 5 above, each with the
    shard's own `runs` and environment class:
    `dispatch T<n>a -> test (local, macos-laptop)`,
    `dispatch T<n>b -> test (mesh, linux-server)`.
-3. File every shard's brief and dispatch line in one space commit, before
-   any shard starts. That space commit and the branch heads at that time
-   are the shards' commit set: each brief's `## Start from` gives the heads
-   by sha, and the space as `main` at the commit that files the brief.
-4. Start the shards: test shards local and mesh together, each as its entry
+3. File the ledger with those lines first, then the shards' briefs. The
+   librarian commits each record alone, so the commit that files the last
+   brief is the last of the shard briefs and dispatch lines. It is the
+   shards' space commit; with the branch heads, it is the shards' commit
+   set.
+4. Start no shard before that commit exists. Give it to every shard at
+   dispatch, on its own line in the local prompt or in the mesh task's
+   Context. Test shards run local and mesh together, each as its entry
    says. Build shards run local, like every build task.
 
 A local agent writes its outputs at their final space-relative paths. A mesh
@@ -332,23 +338,36 @@ Read a sharded verify's state by this rule (`PROCESS.md §7`); the `swe-pod`
 skill reads it the same way.
 
 - The current commit set is each `change/<id>` head now (a repo the spec
-  does not name, at its pin), with the space commit that holds the latest
-  shard briefs.
+  does not name, at its pin), with the shards' space commit: the commit
+  that filed the last of the latest shard briefs ("Shards", above).
 - Take each shard's latest record: of the records
   `changes/<id>/evidence/<UTC>-<shard id>.md`, the one with the newest UTC.
-  The records are green together only when every one of them names the
+  It is at the current commit set when each repo's sha in it is the current
+  one, its space sha is the shards' space commit, and neither
+  `changes/<id>/tests/` nor `tests/` has changed since that commit.
+  Otherwise it is out of date: a repo moved, it ran at another space
+  commit, or `changes/<id>/tests/` or `tests/` changed after that commit.
+- The records are green together only when every one of them is at the
   current commit set, every result in every one of them is a pass, and
   together they give a result for every scenario, regression test, unit
   suite and declared quality check. A shard with no record yet leaves them
   not green.
 - The change is verified only when they are green together and the
   whole-change review has no open Critical or Important finding.
-- A shard whose latest record names another commit set is out of date: the
-  change is not verified until it runs again at the current commit set. If
-  no branch head has moved since the shard briefs were filed, dispatch that
-  shard again from its brief, with a new dispatch line. If one has, write
-  every shard's brief again at the new commit set, file them in one space
-  commit, and dispatch every shard again.
+- While a shard is out of date, the change is not verified, and the shard
+  runs again at the current commit set:
+  - If the commit set has moved since the shards' space commit, through a
+    branch head or the tests, write every shard's brief again, with the new
+    commit set under test in `## Start from` so its text changes, and
+    dispatch every shard as under "Shards", above, at the new shards'
+    space commit.
+  - If it has not moved, dispatch the shard again from its brief, with a
+    new dispatch line and the same shards' space commit. That covers a
+    shard whose record names another commit set, and a shard whose run
+    failed for a flaky or environmental reason.
+  - A shard that failed on the code or on a test runs again only once the
+    fix lands ("Verify failures", above). The fix moves the commit set, so
+    every shard runs again.
 
 ### Heavy checks
 

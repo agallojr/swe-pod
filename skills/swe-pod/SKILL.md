@@ -193,9 +193,12 @@ lead applies (swe-pod `agents/swe-lead.md`, "Sharded verify").
 - **A shard's latest record** is the shard record whose `shard:` is that
   shard and whose id, `ev-<YYYYMMDDTHHMMZ>-<shard id>`, has the newest UTC.
   Its `tests:` lists the tests it ran, by test name.
-- **Current commit set.** Each repo as in 1.5. The space: the commit that
-  holds the latest shard briefs, the newest commit on the space's `HEAD`
-  that changed a shard's brief:
+- **Current commit set.** Each repo as in 1.5. The space: the shards'
+  space commit, the commit that filed the last of the latest shard briefs.
+  The lead files the shards' dispatch lines before their briefs, so it is
+  also the last of the shard briefs and dispatch lines, and the lead gives
+  it to every shard at dispatch (`PROCESS.md §11`). It is the newest commit
+  on the space's `HEAD` that changed a shard's brief:
 
   ```
   git -C <space> log -1 --format=%h HEAD -- changes/<id>/tasks/<shard id>-brief.md ...
@@ -204,9 +207,11 @@ lead applies (swe-pod `agents/swe-lead.md`, "Sharded verify").
   with every shard's brief path in place of the dots.
 - A shard's latest record is **at the current commit set** when each repo's
   sha in its `commit_set` matches the one above (the first 7 hex digits
-  suffice), its space sha is the commit that holds the latest shard
-  briefs, and, as in 1.5, `git -C <space> diff --quiet <that commit> HEAD
-  -- changes/<id>/tests tests` exits 0. Otherwise it is **out of date**.
+  suffice), its space sha is the shards' space commit, and, as in 1.5,
+  `git -C <space> diff --quiet <that commit> HEAD -- changes/<id>/tests
+  tests` exits 0. Otherwise it is **out of date**: a repo moved, it ran at
+  another space commit, or `changes/<id>/tests/` or `tests/` changed after
+  that commit.
 - The shards' latest records are **green together** only when all three
   hold:
   - every shard has a latest record, and every one of them is at the
@@ -215,10 +220,18 @@ lead applies (swe-pod `agents/swe-lead.md`, "Sharded verify").
   - together they hold a pass for every result 1.6 lists. A result is held
     when at least one of the records gives it.
 - An out-of-date shard keeps the change unverified until it runs again at
-  the current commit set. If no branch head has moved since the shard
-  briefs were filed, the lead dispatches that shard again from its brief.
-  If one has, the lead writes every shard's brief again, files them in one
-  space commit, and dispatches every shard.
+  the current commit set. The lead (swe-pod `agents/swe-lead.md`, "Sharded
+  verify"):
+  - if the commit set has moved since the shards' space commit, through a
+    branch head or the tests, writes every shard's brief again, with the
+    new commit set under test in `## Start from`, and dispatches every
+    shard at the new shards' space commit;
+  - if it has not moved, dispatches the shard again from its brief, at the
+    same shards' space commit. That covers a shard whose record names
+    another commit set, and a shard whose run failed for a flaky or
+    environmental reason;
+  - runs a shard that failed on the code or on a test again only once the
+    fix lands, which moves the commit set, so every shard runs again.
 
 ## 2. Where things stand
 

@@ -130,7 +130,11 @@ Writing mode:
 Verify mode:
 
 1. Check out the commit set the brief gives: the space and every repo in
-   `pod.yaml`, with a repo the spec does not name at its pin.
+   `pod.yaml`, with a repo the spec does not name at its pin. In a verify
+   shard, the brief gives the branch heads, and the lead gives the space
+   at dispatch, as the shards' space commit, on its own line in your
+   prompt or the task's Context. Check out the space there, and name it as
+   `space:` in the record's `commit_set`.
 2. In the environment class the brief names, run the change's tests in
    `changes/<id>/tests/`, the regression suite `tests/`, each affected
    repo's unit suite, and every quality check in the spec's Quality section.

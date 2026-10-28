@@ -556,10 +556,16 @@ brief lists, and returns one evidence record for the shard:
 
 The lead starts every shard at one commit set (§11). The current commit set
 is each code branch's head now (a repo the spec does not name, at its pin),
-with the space commit that holds the latest shard briefs. Take each shard's
-latest record. The records are green together only when all three hold:
+with the shards' space commit: the commit that filed the last of the latest
+shard briefs. A shard's latest record is at the current commit set when each
+code repo's sha in it is that repo's current one, its space commit is the
+shards' space commit, and neither `changes/<id>/tests/` nor `tests/` has
+changed since that commit. Otherwise it is out of date: a repo moved, it ran
+at another space commit, or `changes/<id>/tests/` or `tests/` changed after
+that commit. Take each shard's latest record. The records are green
+together only when all three hold:
 
-- every one of them names the current commit set;
+- every one of them is at the current commit set;
 - every result in every one of them is a pass;
 - together they give a result for every scenario, regression test, unit
   suite and declared quality check.
@@ -568,12 +574,20 @@ The change is verified only when they are green together and the
 whole-change review has no open Critical or Important finding. A shard with
 no record yet leaves the change unverified.
 
-A shard whose latest record names another commit set is out of date, and
-the change is not verified until that shard runs again at the current commit
-set. Lead: if no branch head has moved since the shard briefs were filed,
-dispatch that shard again from its brief. If one has, write every shard's
-brief again at the new commit set, file them in one space commit, and run
-every shard again.
+While a shard is out of date, the change is not verified; the shard runs
+again at the current commit set. Lead:
+
+- If the commit set has moved since the shards' space commit, through a
+  branch head or the tests, write every shard's brief again. Its
+  `## Start from` names the new commit set under test, so its text changes.
+  Dispatch every shard again as §11 says, at the new shards' space commit.
+- If the commit set has not moved, dispatch a shard again from its brief,
+  at the same shards' space commit. That covers a shard whose record names
+  another commit set, and a shard whose run failed for a flaky or
+  environmental reason.
+- A shard that failed on the code or on a test runs again only once the
+  fix lands, routed as the table above says. The fix moves the commit set,
+  so every shard runs again.
 
 ## 8 Integrate
 
@@ -728,16 +742,26 @@ goes. Machine paths never go in a brief. Each role's definition is
   nodes, will let a `swe.build` executor commit to and push only
   `change/<id>`, in the repo its brief names.
 - **Shards.** Dispatch a sharded task's shards together, one brief per
-  shard. Each shard's brief holds its own plan entry and lists, in
-  `## Task`, the tests or files that shard runs or touches. Write the split
-  there when the plan leaves it to you. File every shard's brief and
-  dispatch line in one space commit before any shard starts; that commit
-  and the branch heads at that time are the shards' commit set. Test shards
-  run local and mesh together, each as its entry's `runs:` and `needs:` say.
-  Build shards run local, like every build task, until the mesh executor's
-  git exception lands. Record one dispatch line per shard, such as
-  `dispatch T7a -> test (local, macos-laptop)` and
-  `dispatch T7b -> test (mesh, linux-server)`.
+  shard.
+  - Each shard's brief holds its own plan entry and lists, in `## Task`,
+    the tests or files that shard runs or touches. Write the split there
+    when the plan leaves it to you. Its `## Start from` names the commit
+    set under test as far as it is known when you write it: each branch
+    head by sha, and the newest space commit that changed
+    `changes/<id>/tests/` or `tests/`, by sha.
+  - Record one dispatch line per shard, such as
+    `dispatch T7a -> test (local, macos-laptop)` and
+    `dispatch T7b -> test (mesh, linux-server)`. File the ledger with those
+    lines first, then the briefs.
+  - The librarian commits each record alone, so the commit that files the
+    last brief is the last of the shard briefs and dispatch lines. It is
+    the shards' space commit; with the branch heads, it is the shards'
+    commit set. Start no shard before it exists, and give it to every
+    shard at dispatch, on its own line in the local prompt or in the mesh
+    task's Context.
+  - Test shards run local and mesh together, each as its entry's `runs:`
+    and `needs:` say. Build shards run local, like every build task, until
+    the mesh executor's git exception lands.
 - **Results.** A mesh agent returns its files (report, tests, review,
   evidence) in its task result, listed under `files:` with each file's
   space-relative path and sha256: text only, at most 1048576 bytes each.
