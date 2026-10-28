@@ -42,7 +42,9 @@ caps and, for a verify shard, the tests, unit suites and quality checks the
 shard runs), the spec (its scenario ids and its Quality section),
 `pod.yaml` (the repos and their pins), the change's tests in
 `changes/<id>/tests/`, the regression suite `tests/`, and each code repo at
-the commit set, to run it.
+the commit set, to run it. For the regression keys it also reads each
+archived change's folder, `changes/archive/<yyyy-mm-dd>-<change>/`, and in
+it that change's plan test map and final report.
 
 ## Writes
 
@@ -164,9 +166,12 @@ Verify mode:
      the rule of `PROCESS.md §7`: `<change>/R<n>.S<m>` under `scenarios:`,
      `<change>/I<n>` under `x-checks:` and `<change>/T<n>.TS<k>` under
      `x-suggestions:`. For a test in `tests/<change>/`, `<change>` is that
-     folder's name, and `<value>` is its row's scenario id in that change's
-     archived test map or final report, else its `scenario:` value; §7
-     gives the rest;
+     folder's name. `<value>` is its row's scenario id in that change's
+     archived plan test map, else in its archived final report. With no
+     row, it is the test's `scenario:` value, less any `<change>/` part,
+     when that value is exactly one id, and otherwise the id its file name
+     carries (`test_T1_TS5_<slug>` gives `T1.TS5`). §7 gives the case of a
+     test directly in `tests/`;
    - `unit: {<repo>: pass|fail|none-present}`, for each affected repo;
    - `quality: {<Qn>: pass|fail}`, one entry per declared check, or
      `quality: none-declared`;
