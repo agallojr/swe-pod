@@ -138,6 +138,9 @@ Verify mode:
 2. In the environment class the brief names, run the change's tests in
    `changes/<id>/tests/`, the regression suite `tests/`, each affected
    repo's unit suite, and every quality check in the spec's Quality section.
+   The regression suite is each `test_*.md` directly in `tests/`, or
+   directly in `tests/<change>/` for an archived change, never fixture data
+   or anything else below them (`PROCESS.md §7`).
    With no Quality section, run no quality check. In a verify shard, run
    only the tests, unit suites and quality checks your brief lists for the
    shard.
@@ -156,15 +159,22 @@ Verify mode:
      in `pod.yaml`, with a repo the spec does not name at its pin;
    - `env: <environment class>` and `actor: <handle>/test`;
    - `scenarios: {<Rn.Sm>: pass|fail|not-run, ...}`, one entry per scenario
-     of the spec, with regression results under qualified ids,
-     `<change>/<Rn.Sm>`;
+     of the spec;
+   - each regression test's result under its key, `<change>/<value>`, by
+     the rule of `PROCESS.md §7`: `<change>/R<n>.S<m>` under `scenarios:`,
+     `<change>/I<n>` under `x-checks:` and `<change>/T<n>.TS<k>` under
+     `x-suggestions:`. For a test in `tests/<change>/`, `<change>` is that
+     folder's name, and `<value>` is its row's scenario id in that change's
+     archived test map or final report, else its `scenario:` value; §7
+     gives the rest;
    - `unit: {<repo>: pass|fail|none-present}`, for each affected repo;
    - `quality: {<Qn>: pass|fail}`, one entry per declared check, or
      `quality: none-declared`;
    - in a shard's record, under `scenarios:`, `unit:` and `quality:`, only
      what the shard ran;
    - optional `x-checks: {<In>: pass|fail}` and
-     `x-suggestions: {T<n>.TS<k>: pass|fail}`;
+     `x-suggestions: {T<n>.TS<k>: pass|fail}` for this change's tests, with
+     the regression keys above beside them;
    - `wall_time_s: <integer>`, the run's wall time in s.
 
    The body holds the failure summaries. Logs appear only as pointers, as
