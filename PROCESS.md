@@ -70,13 +70,31 @@ on `main`.
 - The Project Space has one branch, `main`, and never another. Keep work in
   flight apart by folder (`changes/<id>/`), not by branch. That is why a
   change's project-level tests wait in its folder until integrate.
-- Lead: at the go, create exactly one code branch, `change/<id>`, in each
-  code repo the spec names, from that repo's pin in `pod.yaml`, and record
-  the base commit in the ledger:
+- Lead: at the go, for each code repo the spec names, and only those, make
+  exactly one code branch, `change/<id>`, from that repo's pin in
+  `pod.yaml`, and push it to the repo's remote.
+  - Make and push it yourself only when the operator's guidance lets the
+    pod commit in its code repos, that is, lets the lead create and push
+    each `change/<id>` at the go and builders commit to it and push it (the
+    pod commit scope rule in swe-pod's `INSTALL.md`, "Rules for your
+    guidance overlay").
+  - Otherwise give the human, for each such repo, the exact commands, with
+    `<checkout>` a checkout of that repo whose `origin` is its remote in
+    `pod.yaml`, and `<pin>` its full pin, and wait until they have run:
+
+    ```
+    git -C <checkout> branch change/<id> <pin>
+    git -C <checkout> push origin change/<id>
+    ```
+
+  Either way, write the go line only once those branches exist on their
+  remotes (`git ls-remote <remote> refs/heads/change/<id>` lists each),
+  recording each base commit:
   `go by <handle>; branches change/<id>: <repo> <sha7>[, <repo> <sha7>]`.
-  Create it once, before any agent needs it. Every agent working the change
-  commits to it.
-- Give a repo the spec does not name no branch. Verify uses its pin.
+  Create each branch once, before any agent needs it. Every agent working
+  the change commits to it.
+- Give a repo the spec does not name no branch and no branch command.
+  Verify uses its pin.
 - No other branch is pushed: no task, agent or personal branches. You may
   work in your own clone or worktree, but your commits reach the remote only
   on `change/<id>`. Never create a branch unless you are the lead at the go.
