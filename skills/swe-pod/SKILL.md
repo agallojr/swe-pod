@@ -351,8 +351,8 @@ files nothing and prints its result.
 2. **Scenario to test.** Once the change has a plan, each scenario needs a
    row in the plan's test map that gives a test name. Once the task in the
    row's "Writes it" or "Written by" column is done, the test's file,
-   `<test name>.md`, needs to be in `changes/<id>/tests/`, or in `tests/`
-   after integrate.
+   `<test name>.md`, needs to be in `changes/<id>/tests/`, or in
+   `tests/<id>/` after integrate.
 3. **Task to commit.** Each build task that has reported needs at least one
    commit on its repo's `change/<id>` with both trailers, `Change: <id>` and
    `Task: T<n>`. Read them, read-only, in a local clone of the repo:
