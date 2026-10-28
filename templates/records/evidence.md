@@ -14,8 +14,8 @@ tests: [<test name>, ...]
 commit_set: {space: <sha7>, <repo>: <sha7>, ...}
 env: <environment class>
 actor: <handle>/test
-# every scenario of this change, then the regression suite's results under
-# qualified ids: <change>/<Rn.Sm>; a shard gives only those it ran
+# every scenario of this change, then the regression suite's scenario tests
+# under <change>/R<n>.S<m>; a shard gives only those it ran
 scenarios: {<Rn.Sm>: pass|fail|not-run, ...}
 # each affected repo's unit suite; none-present when the repo has none; a
 # shard gives only those it ran
@@ -24,8 +24,10 @@ unit: {<repo>: pass|fail|none-present}
 # ran; when the spec has no Quality section, write this line instead:
 # quality: none-declared
 quality: {<Qn>: pass|fail}
-# optional: the plan's inspection checks and the builders' test suggestions;
-# leave either key out when there are none
+# optional: the plan's inspection checks and the builders' test suggestions,
+# then the regression suite's: <change>/I<n> under x-checks: and
+# <change>/T<n>.TS<k> under x-suggestions:; leave either key out when there
+# are none
 x-checks: {<In>: pass|fail}
 x-suggestions: {T<n>.TS<k>: pass|fail}
 # the whole run, in s
