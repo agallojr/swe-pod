@@ -1,0 +1,11 @@
+space: 1                      # manifest schema version
+id: proj:<project>            # proj:<name>, lowercase letters, digits and hyphens
+kind: project
+title: <one-line title of the project>
+visibility: shared            # private | shared | public
+owners: [<handle>]            # human handles accountable for the space
+writer_model: multi-actor
+categories: [notes, lore, decisions, evidence, handoffs, changes, tests]
+header_profile: shareable     # actors, environment classes, space-relative paths
+may_reference: []             # other shared or public space ids records may cite
+retention: until-archived
