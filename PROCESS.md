@@ -540,13 +540,15 @@ Failure output for R1.S2; pointers to logs, never the logs themselves.
     a row with its test name (its file name without `.md`), else the one
     whose final report's `## Scenarios` table has such a row; where several
     do, the one whose archive folder name sorts last. With neither, the
-    change of a `scenario:` value written `<change>/<value>`.
+    change of a `scenario:` value that is one id written `<change>/<value>`.
   - `<value>`: the scenario id in that change's row, from its archived plan
     test map, else from its archived final report. With no such row, the
-    test's `scenario:` front-matter value, less any `<change>/` part. With
-    no `scenario:` value either, the id its file name carries:
+    test's `scenario:` front-matter value, less any `<change>/` part, when
+    that value is exactly one id. When it is not (it lists several ids, or
+    the test has none), the id its file name carries:
     `test_R<n>_S<m>_<slug>` gives `R<n>.S<m>`, `test_I<n>_<slug>` gives
-    `I<n>` and `test_T<n>_TS<k>_<slug>` gives `T<n>.TS<k>`.
+    `I<n>` and `test_T<n>_TS<k>_<slug>` gives `T<n>.TS<k>`. So each test
+    has at most one key.
   - Put `<change>/R<n>.S<m>` under `scenarios:`, `<change>/I<n>` under
     `x-checks:` and `<change>/T<n>.TS<k>` under `x-suggestions:`. A test
     with no key still counts: name it in the body as having none.
