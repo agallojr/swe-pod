@@ -529,10 +529,19 @@ Failure output for R1.S2; pointers to logs, never the logs themselves.
 - `commit_set` names every repo in `pod.yaml`. `env` is an environment
   class. `wall_time_s` is the run's wall time in s.
 - Give a result for every scenario, every unit suite and every declared
-  quality check. Regression results go under qualified ids,
-  `<change>/<Rn.Sm>`. A repo with no unit tests is `none-present`. A spec
-  with no Quality section gets `quality: none-declared`, and you run no
-  quality check. A `not-run (cap)` result names its cap.
+  quality check, and for every regression test: each `test_*.md` directly
+  in `tests/<change>/` or in `tests/`, never fixture data below them. Give
+  a regression test's result under its key, `<change>/<value>`. `<change>`
+  is the folder `tests/<change>/` it sits in, or for a test directly in
+  `tests/`, the archived change whose test map or final report names it.
+  `<value>` is its scenario id in that change's archived test map or final
+  report, else its `scenario:` value, else the id its file name carries.
+  Put `<change>/R<n>.S<m>` under `scenarios:`, `<change>/I<n>` under
+  `x-checks:` and `<change>/T<n>.TS<k>` under `x-suggestions:`. The
+  `swe-pod` skill reads the same key. A repo with no unit tests is
+  `none-present`. A spec with no Quality section gets
+  `quality: none-declared`, and you run no quality check. A
+  `not-run (cap)` result names its cap.
 - Put failure summaries in the body. Logs appear only as pointers:
   space-relative paths or URLs, never a machine path.
 - A change is not verified while any project-level test, regression test,
@@ -629,7 +638,8 @@ space's current pins and `tests/`.
    order. Discard work only when the human asks in so many words, after you
    confirm.
 5. **Update**, after the merge, in one space commit: move
-   `changes/<id>/tests/` into `tests/`; advance every affected pin; mark
+   `changes/<id>/tests/` into `tests/`, as the folder `tests/<id>/`;
+   advance every affected pin; mark
    `integrated:` on the spec; move the folder to
    `changes/archive/<yyyy-mm-dd>-<id>/`. Docs that ship with the code are
    updated by a build task before the merge; project docs in the space
