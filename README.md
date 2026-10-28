@@ -150,6 +150,11 @@ Project Space in the bus by hand, under `<bus>/spaces/`, and lists it in
   environment class, never a machine. Mesh task ids and agent ids stay in the
   bus, so the space can be handed to someone with no access to the mesh.
 - **Fences.** Pod roles loosen no mesh fence. The git gate, the solver-run
-  fence and the budget policy bind every pod agent. A check expected to take
-  over 60 s is heavy: with you present, the lead first gives you the command,
-  the caps and the expected wall time in s.
+  fence and the budget policy bind every pod agent. Heaviness is judged per
+  check, from that check's own recorded expected run time alone: over 60 s is
+  heavy, 60 s or less is not, whatever its cap, its label or the task's total
+  time. A check that records no expected run time, such as a unit suite or a
+  declared quality check, takes it from its brief or from the record of its
+  last run; with neither, the lead treats it as heavy and asks. With you
+  present, the lead first gives you the command, the caps and the expected
+  wall time in s of each heavy check, and of no other check.
