@@ -41,10 +41,13 @@ brief. Each suggestion carries its for-the-tester part alone, in spec terms.
   failure the builder expects>
 
 ## Result goes to
-<!-- Keep the lines that apply to this task. -->
+<!--
+Keep the lines that apply to this task. Every test task keeps the report line.
+-->
 - tests: changes/<id>/tests/
 - at base: each new test's result at the base commit set, with its reason,
   for the ledger
 - evidence: changes/<id>/evidence/<YYYYMMDDTHHMMZ>.md (a verify task)
+- report: changes/<id>/evidence/<YYYYMMDDTHHMMZ>-T<n>-report.md
 
 Do not read plan.md, ledger.md, any other brief, report or review, or any code-repo diff or implementation body.
