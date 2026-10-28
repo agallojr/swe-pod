@@ -834,7 +834,9 @@ goes. Machine paths never go in a brief. Each role's definition is
   less is not, whatever its cap, its label or the task's total time. A
   check that records no expected run time, such as a unit suite or a
   declared quality check, takes it from its brief or from the record of its
-  last run; with neither, treat it as heavy and ask. In a session with the
+  last run when either gives one, and is heavy only when that time is over
+  60 s. With no known time, it is not heavy for the lead's ask, and the
+  running agent's own fence still binds the run. In a session with the
   human present, before you dispatch a task that includes a heavy check,
   give the human the command, the caps and the expected wall time in s of
   each heavy check, and of no other check, and record
