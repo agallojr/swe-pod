@@ -41,6 +41,24 @@ for each change its `spec.md`, `plan.md`, `ledger.md` and `evidence/`, then
   `pod.yaml`. For commits, fetch the branch into a local clone and read its
   log (section 5). Never commit, push, check out, rebase or create a branch
   in a code repo from this skill.
+- **Branch head.** The head of `change/<id>` in a repo is given by the
+  first of these that holds:
+  1. the remote can be read (`git ls-remote` exits 0) and lists the
+     branch: the sha it lists;
+  2. the remote can be read and lists no such branch: none, written
+     `<repo> missing`;
+  3. the remote cannot be read (`git ls-remote` exits non-zero, as for a
+     placeholder URL or a host that does not resolve): taken from the
+     records. It is the end sha of the newest ledger range for that repo,
+     in the event order of 1.4:
+     a status line's `<repo> <sha7>..<sha7>`, or a fix-round line's
+     `<sha7>..<sha7>` for a task whose plan entry has `repo: <repo>`. With
+     no such range, it is that repo's sha on the go line. With neither, it
+     is none, written `<repo> missing`.
+
+  Rule 3 reads only committed records, so two agents that cannot read a
+  remote give the same head. Every rule that needs a branch head (1.5,
+  `status-format.md`) takes it from here.
 
 ### 1.2 Change state
 
@@ -113,8 +131,10 @@ says so, and otherwise only for the "As of" time.
   task id written between `dispatch` and `->`, so one line may dispatch
   several tasks.
 - **Status line:** an event that begins `T<n>` and then DONE,
-  DONE_WITH_CONCERNS, BLOCKED or NEEDS_CONTEXT. An event that says
-  `T<n> complete` in words is a DONE line for `T<n>`.
+  DONE_WITH_CONCERNS, BLOCKED or NEEDS_CONTEXT. An event that says in
+  plain words that `T<n>` is finished, done or complete, such as
+  `T0 complete` or `..., so T0 is finished`, is a DONE line for `T<n>`;
+  one that says it is not, or not yet, is not.
 - **Review line:** an event that begins `T<n> review:` or
   `T<n> review r<k>:`. It is a review of `T<n>`, the task reviewed, and
   gives its findings as counts per severity after the `;`.
@@ -140,8 +160,8 @@ to.
 
 ### 1.5 Current commit set
 
-- For each repo in the spec's `repos:` list: the head of `change/<id>` on
-  its remote.
+- For each repo in the spec's `repos:` list: the head of `change/<id>`, by
+  the Branch head rule (1.1). A repo with none matches no record.
 - For each other repo in `pod.yaml`: its pin.
 - For the space: the content of `changes/<id>/tests/` and `tests/` at the
   space's `HEAD`.
@@ -167,10 +187,22 @@ result verify must give (`PROCESS.md §7`), and nothing in it is `fail` or
 - every scenario of the spec, by its id;
 - every test file `test_*.md` in `changes/<id>/tests/`, under the key
   that section 5, step 4, maps it to, such as `I<n>` under `x-checks:`;
-- every regression test: for each archived change,
-  `changes/archive/<yyyy-mm-dd>-<change>/`, each row of its plan's test map
-  whose test file, `<test name>.md`, is under the space's `tests/`, under
-  `scenarios:` as `<change>/<Rn.Sm>`, with `<Rn.Sm>` from the row;
+- every regression test: each file `test_*.md` under the space's `tests/`,
+  in that folder or any folder below it, under `scenarios:` as
+  `<change>/<Rn.Sm>`. Its test name is the file name without `.md`. Its
+  `<change>` and `<Rn.Sm>` come from the first of these that names it:
+  1. a row of the test map in an archived plan,
+     `changes/archive/<yyyy-mm-dd>-<change>/plan.md`, with that test name:
+     that change, and the row's scenario id;
+  2. a row of the `## Scenarios` table in an archived final report,
+     `changes/archive/<yyyy-mm-dd>-<change>/report.md`, with that test
+     name: that change, and the row's scenario;
+  3. the test's own front matter: its `scenario:` value, when it is
+     written `<change>/<Rn.Sm>`.
+
+  Where several archived changes name it at one step, the one whose folder
+  name sorts last gives it. A test that none of these keys still counts,
+  and its result is missing;
 - each repo in the spec's `repos:` under `unit:`, as `pass` or
   `none-present`;
 - every quality check the spec declares, under `quality:`. A spec that
@@ -278,8 +310,9 @@ it.
    ```
 
 2. Read the change's state and its tasks (section 1). The ready tasks are
-   those whose `after` tasks are all done and which have no dispatch line
-   yet (`status-format.md`, "Task states"). The first of them, in task
+   those in state ready (`status-format.md`, "Task states"): with no
+   dispatch line yet, and whose `after` tasks are all done, or, for the
+   review of one task, whose task has reported. The first of them, in task
    order, is the next task. With none ready, a verify shard that is done
    and whose latest record is out of date (1.7) is next: it runs again at
    the current commit set, as 1.7 says.

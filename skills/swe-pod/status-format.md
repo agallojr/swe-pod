@@ -75,8 +75,9 @@ the file ends with one newline.
   With none passed, the bullet is `- gates: none`.
 - **branches:** before the go line, `- branches: none yet`. After it, each
   repo in the spec's `repos:` list, in that order, as `<repo> <sha7>`, the
-  head of `change/<id>` on that repo's remote. A repo whose remote has no
-  such branch is `<repo> missing`.
+  head of `change/<id>` by the Branch head rule (`SKILL.md` section 1.1):
+  read from the remote when the remote can be read, and from the records
+  when it cannot. A repo with no head by that rule is `<repo> missing`.
 - **tasks:** the number of tasks in each task state, in the order shown,
   zeros included. Then an empty line and the task table.
 - **latest evidence:** `- latest evidence: none` until the change has an
@@ -161,27 +162,29 @@ Decide each task's state by the first of these that holds. The ledger terms
    - A test or lead task: it has reported.
 2. **blocked.** Its newest status line, later than its newest dispatch
    line, is BLOCKED or NEEDS_CONTEXT.
-3. **dispatched.** A dispatch line names it. A review task is also
-   dispatched once the task it reviews has reported: the lead dispatches a
-   review as soon as it records the report, and writes no dispatch line
-   for it.
+3. **dispatched.** A dispatch line names it. A review task too is
+   dispatched only by its own dispatch line.
 4. **ready.** It is not held, and every task in its `after` list is done.
+   A review task that reviews one task is ready instead once that task has
+   reported and every other task in its `after` list is done, since the
+   review is part of that task's done-when.
 5. **waiting.** Anything else, held tasks included.
 
 ### Latest
 
 A task's events are the dispatch, status, fix-round, at-base and
-returned-to-test lines that name it. A review task's events are the review
-lines of the task it reviews (its own, when it reviews no single task). The
-newest is the one with the latest UTC, and of those the one written last.
-The cell is its UTC, a space, and the event in this form:
+returned-to-test lines that name it. A review task's events are its own
+dispatch lines and the review lines of the task it reviews (its own review
+lines, when it reviews no single task). The newest is the one with the
+latest UTC, and of those the one written last. The cell is its UTC, a
+space, and the event in this form:
 
 | Event | Cell text after the UTC |
 |---|---|
 | dispatch | `dispatch -> <role> (<local or mesh>, <env class or any>)` |
 | status | the status word, then `, <repo> <sha7>..<sha7>` and `, unit <p>/<n> pass` when the line has them in that form; nothing else |
-| `T<n> complete`, in words | `DONE` |
-| review | `review: ` or `review r<k>: `, then `spec ok` or `spec issues`, then `; ` and its counts as `<k> <Severity>` in the order Critical, Important, Minor, joined by `, `, without file and line; `none` when it lists no finding |
+| in words, that the task is finished, done or complete (`SKILL.md` section 1.4) | `DONE` |
+| review | `review: ` or `review r<k>: `, then `spec ok` or `spec issues`, then `; ` and its counts as `<k> <Severity>` in the order Critical, Important, Minor, joined by `, `, without file and line. Leave out each count of 0. When no count is left, or the line gives none, write `none`: `spec ok; 0 Important` gives `review: spec ok; none` |
 | fix round | `fix round <r>/5: <a> addressed, <o> open` |
 | at base | `at base: <f> fail, <p> pass`, counting the tests the line names |
 | returned to test | `returned to test: <test name>` |
@@ -214,8 +217,9 @@ The ledger's review and fix-round lines give the counts.
   order for tasks.
 - Every empty case has its fixed text: `none`, `none yet`, `-`, `0`.
 - The records are read as committed (`SKILL.md` section 1.1), and branch
-  heads from the remotes, so the text changes only when a record, a pin or
-  a branch head changes.
+  heads by its Branch head rule, from the remotes or, where a remote cannot
+  be read, from the records, so the text changes only when a record, a pin
+  or a branch head changes.
 
 ## Example
 
