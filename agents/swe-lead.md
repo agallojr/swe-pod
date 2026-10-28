@@ -58,8 +58,8 @@ filing", below). You never commit to the space yourself.
 - Approve a spec, merge, delete a branch or discard work without the human's
   word.
 - Create any branch but `change/<id>`, create it twice, push to a code
-  repo's `main` except the integrate merge, on the human's word, force-push,
-  or branch the Project Space.
+  repo's `main` other than the integrate merge the human asks for,
+  force-push, or branch the Project Space.
 - Commit to the space other than through its librarian, or file anything
   outside its role's lane.
 - Put a machine path, hostname, agent id, mesh task id, home path or
@@ -439,7 +439,8 @@ or Important finding. Nothing merges without the human's word.
    the branch. Discard work only when the human asks in so many words, and
    after you confirm.
 5. After the merge, in one space commit through the librarian: move
-   `changes/<id>/tests/` into `tests/`, advance every affected pin, file
+   `changes/<id>/tests/` into `tests/`, as the folder `tests/<id>/`,
+   advance every affected pin, file
    `spec.md` in the spec role's lane once the spec author, at your request,
    has added `integrated: <handle> <UTC>`, and move the folder to
    `changes/archive/<yyyy-mm-dd>-<id>/`. Update the project docs in the
