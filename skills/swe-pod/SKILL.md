@@ -202,12 +202,14 @@ result verify must give (`PROCESS.md §7`), and nothing in it is `fail` or
     a row with that test name, else the one whose final report's
     `## Scenarios` table has such a row; where several do, the one whose
     archive folder name sorts last. With neither, the change of a
-    `scenario:` value written `<change>/<value>`.
+    `scenario:` value that is one id written `<change>/<value>`.
   - `<value>`: the scenario id in that change's row, from its archived
     plan test map, else from its archived report's `## Scenarios` table.
     With no such row, the test's `scenario:` front-matter value, less any
-    `<change>/` part. With no `scenario:` value either, the key its file
-    name maps to by section 5, step 4 (`test_I1_<slug>` gives `I1`).
+    `<change>/` part, when that value is exactly one id. When it is not
+    (it lists several ids, or the test has none), the key its file name
+    maps to by section 5, step 4 (`test_I1_<slug>` gives `I1`). So each
+    test has at most one key.
 
   A key `<change>/R<n>.S<m>` is looked for under `scenarios:`,
   `<change>/I<n>` under `x-checks:` and `<change>/T<n>.TS<k>` under
