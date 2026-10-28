@@ -831,10 +831,13 @@ goes. Machine paths never go in a brief. Each role's definition is
   fence and the budget policy bind every pod agent, and heavy checks run
   under them like any solver run. Judge heaviness per check, from that
   check's own recorded expected run time alone: over 60 s is heavy, 60 s or
-  less is not, whatever its cap, its label or the task's total time. In a
-  session with the human present, before you dispatch a task that includes
-  a heavy check, give the human the command, the caps and the expected wall
-  time in s of each heavy check, and of no other check, and record
+  less is not, whatever its cap, its label or the task's total time. A
+  check that records no expected run time, such as a unit suite or a
+  declared quality check, takes it from its brief or from the record of its
+  last run; with neither, treat it as heavy and ask. In a session with the
+  human present, before you dispatch a task that includes a heavy check,
+  give the human the command, the caps and the expected wall time in s of
+  each heavy check, and of no other check, and record
   `heavy: asked <handle> before T<n>: <command name>; caps <caps>; expected <s> s`
   for each. A task with no heavy check needs no such ask.
 
