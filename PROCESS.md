@@ -529,18 +529,29 @@ Failure output for R1.S2; pointers to logs, never the logs themselves.
 - `commit_set` names every repo in `pod.yaml`. `env` is an environment
   class. `wall_time_s` is the run's wall time in s.
 - Give a result for every scenario, every unit suite and every declared
-  quality check, and for every regression test: each `test_*.md` directly
-  in `tests/<change>/` or in `tests/`, never fixture data below them. Give
-  a regression test's result under its key, `<change>/<value>`. `<change>`
-  is the folder `tests/<change>/` it sits in, or for a test directly in
-  `tests/`, the archived change whose test map or final report names it.
-  `<value>` is its scenario id in that change's archived test map or final
-  report, else its `scenario:` value, else the id its file name carries.
-  Put `<change>/R<n>.S<m>` under `scenarios:`, `<change>/I<n>` under
-  `x-checks:` and `<change>/T<n>.TS<k>` under `x-suggestions:`. The
-  `swe-pod` skill reads the same key. A repo with no unit tests is
-  `none-present`. A spec with no Quality section gets
-  `quality: none-declared`, and you run no quality check. A
+  quality check, and for every regression test. A regression test is a
+  `test_*.md` directly in `tests/`, or directly in a folder
+  `tests/<change>/` for which `changes/archive/<yyyy-mm-dd>-<change>/`
+  exists. Nothing deeper is one: fixture data such as
+  `tests/<change>/fixtures/` holds none. Give its result under its key,
+  `<change>/<value>`, the key the `swe-pod` skill reads:
+  - `<change>`: for a test in `tests/<change>/`, that folder's name. For a
+    test directly in `tests/`, the archived change whose plan test map has
+    a row with its test name (its file name without `.md`), else the one
+    whose final report's `## Scenarios` table has such a row; where several
+    do, the one whose archive folder name sorts last. With neither, the
+    change of a `scenario:` value written `<change>/<value>`.
+  - `<value>`: the scenario id in that change's row, from its archived plan
+    test map, else from its archived final report. With no such row, the
+    test's `scenario:` front-matter value, less any `<change>/` part. With
+    no `scenario:` value either, the id its file name carries:
+    `test_R<n>_S<m>_<slug>` gives `R<n>.S<m>`, `test_I<n>_<slug>` gives
+    `I<n>` and `test_T<n>_TS<k>_<slug>` gives `T<n>.TS<k>`.
+  - Put `<change>/R<n>.S<m>` under `scenarios:`, `<change>/I<n>` under
+    `x-checks:` and `<change>/T<n>.TS<k>` under `x-suggestions:`. A test
+    with no key still counts: name it in the body as having none.
+- A repo with no unit tests is `none-present`. A spec with no Quality
+  section gets `quality: none-declared`, and you run no quality check. A
   `not-run (cap)` result names its cap.
 - Put failure summaries in the body. Logs appear only as pointers:
   space-relative paths or URLs, never a machine path.
