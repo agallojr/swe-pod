@@ -192,6 +192,24 @@ yourself. For each ready task:
    environment class, never a machine:
    `dispatch T<n> -> <role> (<local|mesh>, <env class|any>)[, base <repo> <sha7>]`.
 
+**Shards** (`PROCESS.md §11`). When the plan shards a task into
+`T<n>a`, `T<n>b`, ..., dispatch the shards together, once their `after`
+lists are done:
+
+1. Write one brief per shard, from its own plan entry. Its `## Task` also
+   lists the tests or files that shard runs or touches. When the plan
+   leaves the split to you, make it now, by the plan's rule.
+2. Record one dispatch line per shard, as in step 5 above, each with the
+   shard's own `runs` and environment class:
+   `dispatch T<n>a -> test (local, macos-laptop)`,
+   `dispatch T<n>b -> test (mesh, linux-server)`.
+3. File every shard's brief and dispatch line in one space commit, before
+   any shard starts. That space commit and the branch heads at that time
+   are the shards' commit set: each brief's `## Start from` gives the heads
+   by sha, and the space as `main` at the commit that files the brief.
+4. Start the shards: test shards local and mesh together, each as its entry
+   says. Build shards run local, like every build task.
+
 A local agent writes its outputs at their final space-relative paths. A mesh
 agent returns them as result files. You file both kinds the same way.
 
@@ -205,7 +223,7 @@ Each role has a lane: the only files you file from its result.
 | plan | `changes/<id>/plan.md` |
 | lead | your own records: the ledger, briefs, `changes/<id>/report.md`, `handoffs/`, `decisions/` and `STATUS.md`; at integrate, the space-wide files |
 | build | its own report, `changes/<id>/tasks/T<n>-report.md`; its code reaches the others on `change/<id>`, never through the space |
-| test | files under `changes/<id>/tests/` and `changes/<id>/evidence/` |
+| test | files under `changes/<id>/tests/` and `changes/<id>/evidence/`, its own report included, as `changes/<id>/evidence/<YYYYMMDDTHHMMZ>-T<n>-report.md` |
 | review | its own review, `changes/<id>/tasks/T<n>-review.md` |
 
 1. When a build task reports, first check that its commits exist on the
@@ -213,19 +231,22 @@ Each role has a lane: the only files you file from its result.
    `Task: T<n>`, and that its report holds red and green output for each
    check. A report is a claim; output and diffs are evidence. If either is
    missing, send the task back to its builder.
-2. Record each task's status,
+2. When a verify shard reports, check its evidence record: `shard:` names
+   the shard, `tests:` lists the tests its brief gave, and it holds results
+   only for what the shard ran. If not, send the task back to its tester.
+3. Record each task's status,
    `T<n> <status>[, <repo> <sha7>..<sha7>][, unit <p>/<n> pass]`. For a
    build task, then dispatch its review to a fresh review agent with the
    brief, the report and the task's diff from base to head, never the
    builder's session.
-3. For a mesh result, check each returned file against its `files:` entry:
+4. For a mesh result, check each returned file against its `files:` entry:
    the space-relative path, the sha256, text only, at most 1048576 bytes.
-4. File only what is in the role's lane. A local agent's files are those it
+5. File only what is in the role's lane. A local agent's files are those it
    changed in the space checkout; a mesh agent's are those its result names.
    Refuse every other file: leave it unfiled and record
    `refused <space path>: lane line 1`, line 1 because the whole file is out
    of lane.
-5. File through the space's librarian. If this session or node holds it,
+6. File through the space's librarian. If this session or node holds it,
    run the `space-librarian` skill on the space root and the files; it
    applies the profile, reference and id checks and commits. Otherwise send
    the files to the role that holds it. For each `FILED <space path> <sha7>`
@@ -233,7 +254,7 @@ Each role has a lane: the only files you file from its result.
    together. For each `REFUSED <space path>: <check> line <n>` record
    `refused <space path>: <check> line <n>` and send the file back to its
    author to fix. A `refused` line never quotes the text that matched.
-6. After each filing, regenerate `STATUS.md` ("Handoff and status", below).
+7. After each filing, regenerate `STATUS.md` ("Handoff and status", below).
 
 ### Suggestions and failures
 
@@ -289,11 +310,12 @@ finding. Minor findings stay in the ledger for the whole-change review.
 After three failed fixes of one problem, stop: the design is the likelier
 fault, so take it to the human with what was tried.
 
-**Whole-change review.** After verify's first green run, dispatch a fresh
-reviewer on the most capable model available, with the spec, the plan,
-every repo's diff, the latest evidence, and the ledger's deferred minors and
-rulings. Its findings go to one builder in one fix wave, then one re-review;
-you rule on what remains.
+**Whole-change review.** After verify's first green run (for a sharded
+verify, the first time its shards' records are green together, below),
+dispatch a fresh reviewer on the most capable model available, with the
+spec, the plan, every repo's diff, the latest evidence, and the ledger's
+deferred minors and rulings. Its findings go to one builder in one fix
+wave, then one re-review; you rule on what remains.
 
 **Rulings.** When the spec supports an answer, decide and keep going, and
 record one line, `Ruling: <what>; <why>; <cost if wrong>`. Every ruling
@@ -303,6 +325,30 @@ outside the change's branches and folder (merging, pushing a shared branch,
 publishing, spending money or a shared allocation, a run past a mesh
 fence), a question only the human can answer that changes what gets built,
 or a plan so broken that every way forward is a guess.
+
+### Sharded verify
+
+Read a sharded verify's state by this rule (`PROCESS.md §7`); the `swe-pod`
+skill reads it the same way.
+
+- The current commit set is each `change/<id>` head now (a repo the spec
+  does not name, at its pin), with the space commit that holds the latest
+  shard briefs.
+- Take each shard's latest record: of the records
+  `changes/<id>/evidence/<UTC>-<shard id>.md`, the one with the newest UTC.
+  The records are green together only when every one of them names the
+  current commit set, every result in every one of them is a pass, and
+  together they give a result for every scenario, regression test, unit
+  suite and declared quality check. A shard with no record yet leaves them
+  not green.
+- The change is verified only when they are green together and the
+  whole-change review has no open Critical or Important finding.
+- A shard whose latest record names another commit set is out of date: the
+  change is not verified until it runs again at the current commit set. If
+  no branch head has moved since the shard briefs were filed, dispatch that
+  shard again from its brief, with a new dispatch line. If one has, write
+  every shard's brief again at the new commit set, file them in one space
+  commit, and dispatch every shard again.
 
 ### Heavy checks
 
@@ -328,14 +374,16 @@ tasks.
 
 ### Merge and integrate
 
-Integrate starts once verify is green and the whole-change review has no
-open Critical or Important finding. Nothing merges without the human's word.
+Integrate starts once verify is green (for a sharded verify, its shards'
+records green together) and the whole-change review has no open Critical
+or Important finding. Nothing merges without the human's word.
 
-1. Before a merge, compare the latest evidence's `commit_set` with the
-   current pins in `pod.yaml` and with the space's `tests/`. If a pin or
-   `tests/` moved since that evidence, dispatch a build task to rebase each
-   affected `change/<id>` onto the new `main`, and verify again. Merge
-   nothing on the older evidence.
+1. Before a merge, compare the latest evidence's `commit_set` (each
+   shard's latest record, for a sharded verify) with the current pins in
+   `pod.yaml` and with the space's `tests/`. If a pin or `tests/` moved
+   since that evidence, dispatch a build task to rebase each affected
+   `change/<id>` onto the new `main`, and verify again. Merge nothing on the
+   older evidence.
 2. Reconcile: the spec must describe what the code does. If the code
    drifted, dispatch a fix. If the spec was wrong and the human agrees, the
    spec author amends it, and the amendment needs approval.

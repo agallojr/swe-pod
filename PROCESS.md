@@ -118,7 +118,7 @@ commit. It is what verify runs against.
 | approved | `spec.md` has `approved:` |
 | planned | `plan.md` exists with its self-review filled in |
 | building | the ledger has a dispatch |
-| verified | the latest evidence is green at the current commit set and the whole-change review has no open Critical or Important finding |
+| verified | the latest evidence is green at the current commit set, or for a sharded verify every shard's latest record is (§7), and the whole-change review has no open Critical or Important finding |
 | integrated | `spec.md` has `integrated:`; the folder is under `changes/archive/` |
 | abandoned | `spec.md` has `abandoned:` with a reason |
 
@@ -273,9 +273,9 @@ code it describes has written the code instead.
    so they start at the go); a suggestions task (role test, after every
    build task) that takes up the builders' test suggestions, if any; and the
    verify run (role test, after every build and test task, with `needs:`
-   naming the environment class the tests require). A spec with entries
-   under `supersedes` also gets a test task that updates the matching tests
-   in `tests/`.
+   naming the environment class the tests require), whole or in shards,
+   each shard with its own `needs:`. A spec with entries under `supersedes`
+   also gets a test task that updates the matching tests in `tests/`.
 7. **Review tasks:** one per build task, plus the whole-change review after
    verify's first green run.
 8. **Integrate task:** role lead, after verify and the whole-change review;
@@ -285,6 +285,25 @@ code it describes has written the code instead.
 10. **Dependency summary:** which tasks run in parallel, and the longest
     chain. Two tasks that touch a common file never run at the same time:
     make one `after` the other.
+
+### Parallel tasks and shards
+
+- Plan for parallel work. Two tasks with no dependency between them run in
+  parallel by default. Put in a task's `after` list only the tasks whose
+  output it needs or that touch a file it touches.
+- A task whose work divides may be sharded: split into shards that several
+  holders of its role run in parallel, local and remote together. Builders
+  take independent files; testers each run part of the suite.
+- Name the shards. Each shard is a task entry of its own, `### T<n>a
+  <title>`, `### T<n>b <title>`, with its own `runs:`, `needs:` and
+  `touches:`. Fields the shards share go once, under a heading that opens
+  with all their ids, such as `### T<n>a and T<n>b <title>`.
+- Say how the work divides: the files each build shard touches, never a
+  file another shard touches; or the tests, unit suites and quality checks
+  each test shard runs, or the rule the lead follows to split them at
+  dispatch. Between them, the shards of a verify run everything verify must
+  give a result for (§7).
+- Build shards run `local`, like every build task, for now (§11).
 
 Then come the plan's last two sections, `Self-review` and `Questions for the
 spec`. Sort each question as (a) answered, (b) minor, with the default
@@ -511,15 +530,50 @@ Failure output for R1.S2; pointers to logs, never the logs themselves.
 | Spec ambiguous or wrong, only the human can say | the human, through the spec author | a proposed edit to the spec |
 | Flaky or environmental | the test agent, debugging per §13 | the runs that disagree |
 
-**Whole-change review.** After the first green run, dispatch a fresh
-reviewer on the most capable model available. It reviews the whole change:
-the spec, the plan, every repo's diff, the latest evidence, and the ledger's
-deferred minors and rulings. It checks completeness (every requirement has
-code and a passing test), correctness (the code does what the spec means,
-edge cases included) and coherence (the plan's decisions show in the code).
-It uses the review format of §5, under its own task number. Its findings go
-to one builder in one fix wave, then one re-review. The lead rules on what
-remains.
+**Whole-change review.** After the first green run (for a sharded verify,
+the first time its shards' records are green together, below), dispatch a
+fresh reviewer on the most capable model available. It reviews the whole
+change: the spec, the plan, every repo's diff, the latest evidence, and the
+ledger's deferred minors and rulings. It checks completeness (every
+requirement has code and a passing test), correctness (the code does what
+the spec means, edge cases included) and coherence (the plan's decisions
+show in the code). It uses the review format of §5, under its own task
+number. Its findings go to one builder in one fix wave, then one re-review.
+The lead rules on what remains.
+
+### Sharded verify
+
+When the plan shards verify (§4), each shard is a verify run of its own. A
+test agent runs only the tests, unit suites and quality checks its shard's
+brief lists, and returns one evidence record for the shard:
+
+- named for the shard,
+  `changes/<id>/evidence/<YYYYMMDDTHHMMZ>-<shard id>.md`, with
+  `id: ev-<YYYYMMDDTHHMMZ>-<shard id>`;
+- with two more keys: `shard: <shard id>`, and `tests: [<test name>, ...]`,
+  the tests that record ran;
+- with results only for what the shard ran.
+
+The lead starts every shard at one commit set (§11). The current commit set
+is each code branch's head now (a repo the spec does not name, at its pin),
+with the space commit that holds the latest shard briefs. Take each shard's
+latest record. The records are green together only when all three hold:
+
+- every one of them names the current commit set;
+- every result in every one of them is a pass;
+- together they give a result for every scenario, regression test, unit
+  suite and declared quality check.
+
+The change is verified only when they are green together and the
+whole-change review has no open Critical or Important finding. A shard with
+no record yet leaves the change unverified.
+
+A shard whose latest record names another commit set is out of date, and
+the change is not verified until that shard runs again at the current commit
+set. Lead: if no branch head has moved since the shard briefs were filed,
+dispatch that shard again from its brief. If one has, write every shard's
+brief again at the new commit set, file them in one space commit, and run
+every shard again.
 
 ## 8 Integrate
 
@@ -673,6 +727,17 @@ goes. Machine paths never go in a brief. Each role's definition is
   exception, deferred to the change that first puts builders on remote
   nodes, will let a `swe.build` executor commit to and push only
   `change/<id>`, in the repo its brief names.
+- **Shards.** Dispatch a sharded task's shards together, one brief per
+  shard. Each shard's brief holds its own plan entry and lists, in
+  `## Task`, the tests or files that shard runs or touches. Write the split
+  there when the plan leaves it to you. File every shard's brief and
+  dispatch line in one space commit before any shard starts; that commit
+  and the branch heads at that time are the shards' commit set. Test shards
+  run local and mesh together, each as its entry's `runs:` and `needs:` say.
+  Build shards run local, like every build task, until the mesh executor's
+  git exception lands. Record one dispatch line per shard, such as
+  `dispatch T7a -> test (local, macos-laptop)` and
+  `dispatch T7b -> test (mesh, linux-server)`.
 - **Results.** A mesh agent returns its files (report, tests, review,
   evidence) in its task result, listed under `files:` with each file's
   space-relative path and sha256: text only, at most 1048576 bytes each.
@@ -681,9 +746,9 @@ goes. Machine paths never go in a brief. Each role's definition is
   that librarian and commits directly. Builders' code reaches the others
   through the pushed `change/<id>` branches.
 - **Lanes.** File only what the task's role writes (§10). Every file a test
-  task changed must be under `changes/<id>/tests/` or
-  `changes/<id>/evidence/`. Refuse to file anything else, and record
-  `refused <space path>: lane line <n>`.
+  task changed, its report included (§12), must be under
+  `changes/<id>/tests/` or `changes/<id>/evidence/`. Refuse to file anything
+  else, and record `refused <space path>: lane line <n>`.
 - **Ordering.** Dispatch a task once every task in its `after` list is done,
   its review included, so independent tasks run in parallel. In a review
   task, `after: [T<k>]` means T<k> has reported and its commit exists; T<k>
@@ -724,13 +789,17 @@ The space has one branch, `main`; work in flight is kept apart by folder
     ledger.md
     tasks/T<n>-brief.md  T<n>-report.md  T<n>-review.md
     tests/                project-level tests for this change
-    evidence/<utc>.md
+    evidence/<utc>.md  <utc>-<shard id>.md  <utc>-<task id>-report.md
     report.md
   changes/archive/<yyyy-mm-dd>-<id>/
   decisions/<utc>-<slug>.md
   handoffs/<utc>-<id>.md
   notes/  lore/
 ```
+
+A test task's report goes in the test lane (§11), under `evidence/`, as
+`<YYYYMMDDTHHMMZ>-<task id>-report.md`. Every other task's report goes under
+`tasks/`, as `T<n>-report.md`.
 
 **Arriving cold.** Read `AGENTS.md`, then `STATUS.md`, then the ledgers. From
 the space and the code repos alone you can tell each open change's state and
@@ -836,8 +905,8 @@ text.
 
 - Per open change: state, owner, gate approvals with handle and time, each
   repo's branch head, each task with role, `local` or `mesh`, state and
-  latest result, the latest evidence's results, and open review findings by
-  severity.
+  latest result, the latest evidence's results (for a sharded verify, each
+  shard's latest record), and open review findings by severity.
 - Task states are waiting, ready, dispatched, done and blocked.
 - A project header lists the pins and the open changes by state.
 

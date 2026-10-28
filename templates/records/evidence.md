@@ -1,19 +1,28 @@
 ---
 # Record: changes/<id>/evidence/<YYYYMMDDTHHMMZ>.md, one file per verify run,
-# named by its UTC start. Replace every <placeholder> and drop these comments.
+# named by its UTC start. A verify shard's record is
+# changes/<id>/evidence/<YYYYMMDDTHHMMZ>-<shard id>.md, one file per shard run.
+# Replace every <placeholder> and drop these comments.
+# a shard's record: id: ev-<YYYYMMDDTHHMMZ>-<shard id>
 id: ev-<YYYYMMDDTHHMMZ>
 change: <id>
+# a shard's record only: its shard id, and the tests the record ran, by test
+# name; leave both keys out of an unsharded record
+shard: <shard id>
+tests: [<test name>, ...]
 # every repo in pod.yaml; a repo the spec does not name, at its pin
 commit_set: {space: <sha7>, <repo>: <sha7>, ...}
 env: <environment class>
 actor: <handle>/test
 # every scenario of this change, then the regression suite's results under
-# qualified ids: <change>/<Rn.Sm>
+# qualified ids: <change>/<Rn.Sm>; a shard gives only those it ran
 scenarios: {<Rn.Sm>: pass|fail|not-run, ...}
-# each affected repo's unit suite; none-present when the repo has none
+# each affected repo's unit suite; none-present when the repo has none; a
+# shard gives only those it ran
 unit: {<repo>: pass|fail|none-present}
-# a result for every check the spec declares; when the spec has no Quality
-# section, write this line instead: quality: none-declared
+# a result for every check the spec declares, or for a shard every check it
+# ran; when the spec has no Quality section, write this line instead:
+# quality: none-declared
 quality: {<Qn>: pass|fail}
 # optional: the plan's inspection checks and the builders' test suggestions;
 # leave either key out when there are none

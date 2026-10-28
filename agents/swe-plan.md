@@ -78,9 +78,10 @@ spec are the builder check. Your stage is `PROCESS.md §4`.
    6. Test tasks: the project-level tests (role test, `after: []`, so they
       start at the go); a suggestions task (role test, after every build
       task); and the verify run (role test, after every build and test task,
-      with `needs` naming the environment class the tests require). For a
-      spec with `supersedes`, add a test task that updates the matching tests
-      in `tests/`.
+      with `needs` naming the environment class the tests require), whole or
+      in shards (step 5), each shard with its own `needs`. For a spec with
+      `supersedes`, add a test task that updates the matching tests in
+      `tests/`.
    7. Review tasks: one per build task, plus the whole-change review after
       verify's first green run.
    8. Integrate task: role lead, after verify and the whole-change review,
@@ -96,7 +97,21 @@ spec are the builder check. Your stage is `PROCESS.md §4`.
    has written the code instead.
 4. Order shared files. Compare every pair of tasks' `touches`; where two
    share a file, put one in the other's `after` list.
-5. Sort each question about the spec, under `## Questions for the spec`, as
+5. Plan parallel by default (`PROCESS.md §4`). Two tasks with no dependency
+   between them run in parallel, so a task's `after` list holds only the
+   tasks whose output it needs and those that share a file with it.
+   Where a task's work divides, you may shard it across its role's holders:
+   - Name the shards. Give each its own entry, `### T<n>a <title>`,
+     `### T<n>b <title>`, with its own `runs`, `needs` and `touches`, and put
+     the fields they share once, under a heading that opens with all their
+     ids, such as `### T<n>a and T<n>b <title>`.
+   - Say how the work divides: the files each build shard touches, which no
+     other shard touches; or the tests, unit suites and quality checks each
+     test shard runs, or the rule the lead follows to split them at
+     dispatch. Between them, a verify's shards run everything verify must
+     give a result for.
+   - Build shards run `local` (`PROCESS.md §11`).
+6. Sort each question about the spec, under `## Questions for the spec`, as
    one of:
    - (a) answered: the spec answers it; cite the clause.
    - (b) minor: you chose a default and planned it; say which, so the spec
@@ -106,10 +121,12 @@ spec are the builder check. Your stage is `PROCESS.md §4`.
 
    A number in a requirement or scenario without its unit or tolerance is a
    question too.
-6. Self-review, written under `## Self-review`, and fix the plan until each
+7. Self-review, written under `## Self-review`, and fix the plan until each
    holds: every requirement maps to a build task; every scenario id in the
    spec is in the test map, with a test name and the task that writes it; no
    step says "TBD", "handle edge cases" or "add tests"; names and types agree
    across tasks; every task has role, after, runs and done-when; every pair of
-   tasks that share a file is ordered by `after`; a spec with `supersedes` has
-   its test-update task.
+   tasks that share a file is ordered by `after`; no `after` entry orders two
+   tasks that neither need each other's output nor share a file; every
+   sharded task names its shards and says how the work divides; a spec with
+   `supersedes` has its test-update task.

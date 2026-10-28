@@ -35,17 +35,19 @@ Generated from the records; never edited by hand. As of <UTC of the newest ledge
 
 One `## <id>` section follows the header for each open change, in byte
 order of the change ids, each with its bullets and task table in the order
-shown. Blocks are separated by one empty line. No line has trailing spaces,
-and the file ends with one newline.
+shown. For a sharded verify, the `latest evidence` bullet takes the sharded
+form given under "Per open change", with one indented line per shard.
+Blocks are separated by one empty line. No line has trailing spaces, and
+the file ends with one newline.
 
 ## Header
 
 - **Space id:** the `id:` value in `space.yaml`, such as `proj:demo`.
 - **As of:** the newest UTC, as `YYYY-MM-DDTHH:MMZ`, among:
   - every ledger line under `changes/`, `changes/archive/` included;
-  - the UTC in the name of each record under `changes/*/evidence/`,
-    `handoffs/` and `decisions/`, written back with its dashes and colon
-    (`20261102T1412Z` is `2026-11-02T14:12Z`);
+  - the UTC that begins the name of each record under
+    `changes/*/evidence/`, `handoffs/` and `decisions/`, written back with
+    its dashes and colon (`20261102T1412Z` is `2026-11-02T14:12Z`);
   - the UTC on each `approved:`, `integrated:` or `abandoned:` line in a
     spec's header (`SKILL.md` section 1.2).
 
@@ -92,6 +94,29 @@ and the file ends with one newline.
   - `x-checks <p>/<n> pass` and `x-suggestions <p>/<n> pass`, where `<n>`
     counts the test files in `changes/<id>/tests/` that map to that key
     (`SKILL.md` section 5, step 4), each only when `<n>` is not 0.
+
+  For a sharded verify (`SKILL.md` section 1.7), the bullet shows each
+  shard's latest record, one indented line per shard, in task order:
+
+  ```text
+  - latest evidence: sharded, <green|not green>: <results>
+    - <shard id>: <ev id>, <env>, <green|not green>[, stale]: <results>
+    - <shard id>: none
+  ```
+
+  - The first line is `green` when the shards' latest records are green
+    together (`SKILL.md` section 1.7). Its results are those above, over
+    the latest records taken together: a result is a pass when one of them
+    passes it and none gives it `fail` or `not-run`. A repo's `unit` is
+    `fail` when one of them gives `fail`, else the first of `pass` and
+    `none-present` that one of them gives, else `missing`.
+  - A shard's line is `<shard id>: none` until the shard has a record.
+    Then it gives that record's id and `env`, `green` when nothing in it
+    is `fail` or `not-run`, and `, stale` when it is out of date. Its
+    results are those above, but each `<n>` counts only the results of
+    that kind the record gives, and a kind it gives none of is left out:
+    `unit` for each repo the record lists, in the spec's `repos:` order,
+    and `quality none-declared` when the record says so.
 - **open findings:** the totals of section "Open findings", below.
 - **next:** one of these, by the change's state:
 
@@ -102,10 +127,15 @@ and the file ends with one newline.
   | planned | `next: the go, by the human` |
   | building, verified | the first ready task, as `next: T<n> -> <role> (<local or mesh>, <env class or any>)`, with `runs:` and `needs:` from the plan |
 
-  When a building or verified change has no ready task, the bullet is
-  `next: none ready; dispatched: T<a>, T<b>`, adding `; blocked: T<c>` when
-  any task is blocked and leaving out a list that would be empty. When every
-  task is done, it is `next: none; every task is done`.
+  When a building or verified change has no ready task, the first of these
+  that holds gives the bullet:
+  - a verify shard is done and its latest record is out of date (`SKILL.md`
+    section 1.7): `next: re-run T<a>[, T<b>] at the current commit set`,
+    naming each such shard in task order;
+  - every task is done: `next: none; every task is done`;
+  - otherwise: `next: none ready; dispatched: T<a>, T<b>`, adding
+    `; blocked: T<c>` when any task is blocked and leaving out a list that
+    would be empty.
 
 ## The task table
 

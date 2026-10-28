@@ -2,12 +2,13 @@
 
 - change: <id>
 - task: T<n>
-- actor: <handle>/build
+- actor: <handle>/<build|test>
 
 <!--
-Record: changes/<id>/tasks/T<n>-report.md. A report is a claim; the commits
-and the test output are the evidence. Replace every <placeholder>, then
-delete these comments.
+Record: changes/<id>/tasks/T<n>-report.md. A test task's report goes in its
+lane instead, as changes/<id>/evidence/<YYYYMMDDTHHMMZ>-T<n>-report.md. A
+report is a claim; the commits and the test output are the evidence. Replace
+every <placeholder>, then delete these comments.
 -->
 
 ## Status

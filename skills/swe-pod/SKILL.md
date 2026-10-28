@@ -52,7 +52,7 @@ Read each change's state from its records, never from memory
 | abandoned | `spec.md` has `abandoned:` with a reason |
 | integrated | `spec.md` has `integrated:`, and the folder is under `changes/archive/` |
 | proposed | `spec.md` has no `approved:` line |
-| verified | the latest evidence (1.6) is green at the current commit set (1.5), and the whole-change review is done with no open Critical or Important finding |
+| verified | the latest evidence (1.6) is green at the current commit set (1.5), or for a sharded verify the shards' latest records are green together (1.7); and the whole-change review is done with no open Critical or Important finding |
 | building | the ledger has a dispatch line |
 | planned | `plan.md` exists, and its `## Self-review` section is filled in: not empty, and no unchecked `- [ ]` item left |
 | approved | `spec.md` has `approved:` |
@@ -153,10 +153,16 @@ tests` exits 0.
 
 ### 1.6 Latest evidence and verified
 
-The **latest evidence** is the record in `changes/<id>/evidence/` with the
-newest id, `ev-<YYYYMMDDTHHMMZ>`. It is **green** when it holds a pass for
-every result verify must give (`PROCESS.md §7`), and nothing in it is
-`fail` or `not-run`:
+An **evidence record** is a file in `changes/<id>/evidence/` whose front
+matter has an `id: ev-...` line. Nothing else there is one: not a test
+task's report, `<YYYYMMDDTHHMMZ>-T<n>-report.md`, and not a log. A record
+with a `shard:` key is a **shard record**; once a change has one, its
+verify is sharded and 1.7 applies.
+
+The **latest evidence** is the evidence record with the newest id,
+`ev-<YYYYMMDDTHHMMZ>`. It is **green** when it holds a pass for every
+result verify must give (`PROCESS.md §7`), and nothing in it is `fail` or
+`not-run`:
 
 - every scenario of the spec, by its id;
 - every test file `test_*.md` in `changes/<id>/tests/`, under the key
@@ -176,6 +182,44 @@ spec that declares Q1 and Q2, is not green, and the change is not verified
 holds `test_I1_<slug>.md`, or one with a result for one regression test of
 ten.
 
+### 1.7 Sharded verify
+
+A sharded verify is read by the rule of `PROCESS.md §7`, the same rule the
+lead applies (swe-pod `agents/swe-lead.md`, "Sharded verify").
+
+- **Shards.** The plan tasks (1.3) whose id has a letter suffix and the
+  number of a shard record's `shard:` value, such as `T19a` and `T19b` for
+  `shard: T19a`, and each `shard:` value itself, in task order.
+- **A shard's latest record** is the shard record whose `shard:` is that
+  shard and whose id, `ev-<YYYYMMDDTHHMMZ>-<shard id>`, has the newest UTC.
+  Its `tests:` lists the tests it ran, by test name.
+- **Current commit set.** Each repo as in 1.5. The space: the commit that
+  holds the latest shard briefs, the newest commit on the space's `HEAD`
+  that changed a shard's brief:
+
+  ```
+  git -C <space> log -1 --format=%h HEAD -- changes/<id>/tasks/<shard id>-brief.md ...
+  ```
+
+  with every shard's brief path in place of the dots.
+- A shard's latest record is **at the current commit set** when each repo's
+  sha in its `commit_set` matches the one above (the first 7 hex digits
+  suffice), its space sha is the commit that holds the latest shard
+  briefs, and, as in 1.5, `git -C <space> diff --quiet <that commit> HEAD
+  -- changes/<id>/tests tests` exits 0. Otherwise it is **out of date**.
+- The shards' latest records are **green together** only when all three
+  hold:
+  - every shard has a latest record, and every one of them is at the
+    current commit set;
+  - nothing in any of them is `fail` or `not-run`;
+  - together they hold a pass for every result 1.6 lists. A result is held
+    when at least one of the records gives it.
+- An out-of-date shard keeps the change unverified until it runs again at
+  the current commit set. If no branch head has moved since the shard
+  briefs were filed, the lead dispatches that shard again from its brief.
+  If one has, the lead writes every shard's brief again, files them in one
+  space commit, and dispatches every shard.
+
 ## 2. Where things stand
 
 Answer from `AGENTS.md`, `STATUS.md` and the ledgers. Use `STATUS.md` as
@@ -186,7 +230,10 @@ behind.
 
 For each open change, say in plain words its state and its next task, as
 `next:` gives them, then anything blocked and any open Critical or
-Important finding. Give the full path to `STATUS.md` and to any record worth
+Important finding. For a sharded verify that is not green together (1.7),
+name each shard whose latest record is out of date or missing, and say
+that the change is not verified until that shard runs at the current
+commit set. Give the full path to `STATUS.md` and to any record worth
 opening.
 
 ## 3. Regenerate STATUS.md
@@ -220,7 +267,9 @@ it.
 2. Read the change's state and its tasks (section 1). The ready tasks are
    those whose `after` tasks are all done and which have no dispatch line
    yet (`status-format.md`, "Task states"). The first of them, in task
-   order, is the next task.
+   order, is the next task. With none ready, a verify shard that is done
+   and whose latest record is out of date (1.7) is next: it runs again at
+   the current commit set, as 1.7 says.
 3. As the lead, write the brief for each ready task and dispatch it, the
    next task first, with its ledger line, as the lead's definition says.
    Its fences hold: a heavy check waits for the human's word on its command,
@@ -257,9 +306,13 @@ files nothing and prints its result.
    `test_*.md` in `changes/<id>/tests/` needs a result in the latest
    evidence: `test_R<n>_S<m>_<slug>` under `scenarios:` as `R<n>.S<m>`,
    `test_I<n>_<slug>` under `x-checks:` as `I<n>`, and
-   `test_T<n>_TS<k>_<slug>` under `x-suggestions:` as `T<n>.TS<k>`.
+   `test_T<n>_TS<k>_<slug>` under `x-suggestions:` as `T<n>.TS<k>`. For a
+   sharded verify, the result is needed in the latest record of a shard
+   whose `tests:` lists the test (1.7).
 5. **Evidence current.** The latest evidence needs to be at the current
-   commit set (1.5).
+   commit set (1.5). For a sharded verify, each shard's latest record
+   needs to be at the current commit set (1.7), and each that is not is a
+   break, by its id.
 
 Print, for each change, this first line and then one line per break, in
 the order of the steps above, by id within a step (`R2` before `R10`, test
