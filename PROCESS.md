@@ -829,11 +829,14 @@ goes. Machine paths never go in a brief. Each role's definition is
   space can be handed to someone with no access to the mesh.
 - **Fences.** Pod roles loosen no mesh fence. The git gate, the solver-run
   fence and the budget policy bind every pod agent, and heavy checks run
-  under them like any solver run. A check expected to take over 60 s is
-  heavy. In a session with the human present, before you dispatch a task
-  that includes a heavy check, give the human the command, the caps and the
-  expected wall time in s, and record
-  `heavy: asked <handle> before T<n>: <command name>; caps <caps>; expected <s> s`.
+  under them like any solver run. Judge heaviness per check, from that
+  check's own recorded expected run time alone: over 60 s is heavy, 60 s or
+  less is not, whatever its cap, its label or the task's total time. In a
+  session with the human present, before you dispatch a task that includes
+  a heavy check, give the human the command, the caps and the expected wall
+  time in s of each heavy check, and of no other check, and record
+  `heavy: asked <handle> before T<n>: <command name>; caps <caps>; expected <s> s`
+  for each. A task with no heavy check needs no such ask.
 
 ## 12 The Project Space
 
