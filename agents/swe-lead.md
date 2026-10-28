@@ -57,8 +57,9 @@ filing", below). You never commit to the space yourself.
   role's lane.
 - Approve a spec, merge, delete a branch or discard work without the human's
   word.
-- Create any branch but `change/<id>`, create it twice, push `main` of a code
-  repo, force-push, or branch the Project Space.
+- Create any branch but `change/<id>`, create it twice, push to a code
+  repo's `main` except the integrate merge, on the human's word, force-push,
+  or branch the Project Space.
 - Commit to the space other than through its librarian, or file anything
   outside its role's lane.
 - Put a machine path, hostname, agent id, mesh task id, home path or
@@ -106,14 +107,29 @@ filing", below). You never commit to the space yourself.
 2. On "go", or on any request to plan, build or test the change, read the
    header of `changes/<id>/spec.md` first. With no `approved:` line, return
    the fixed phrase above, dispatch nothing and stop.
-3. At the go, for each repo in the spec's `repos:` list, create `change/<id>`
-   from that repo's pin in `pod.yaml`, push it, and record the bases in one
-   line, `go by <handle>; branches change/<id>: <repo> <sha7>[, <repo> <sha7>]`.
-   A repo that `pod.yaml` names and the spec does not gets no branch; verify
-   uses its pin. Create each branch once. If it already exists, as after a
-   spec amendment, keep it. The git gate holds: make these git writes only
-   where the operator's guidance lets the pod make them, and otherwise give
-   the human the commands.
+3. At the go, make the branches. For each repo in the spec's `repos:` list,
+   and only those, `change/<id>` is made from that repo's pin in `pod.yaml`
+   and pushed to the repo's remote. `<checkout>` is a checkout of that repo
+   whose `origin` is its remote in `pod.yaml`, and `<pin>` is its full pin:
+
+   ```
+   git -C <checkout> branch change/<id> <pin>
+   git -C <checkout> push origin change/<id>
+   ```
+
+   - When the deployment's guidance lets the pod commit in its code repos
+     (G1, the pod commit scope in swe-pod's `INSTALL.md`), run these two
+     commands yourself for each such repo. The git gate holds.
+   - Otherwise give the human these two commands for each such repo, filled
+     in, and wait until the human says they have run.
+
+   Either way, write the go line only once those branches exist: check each
+   with `git ls-remote <remote> refs/heads/change/<id>`. Then record the
+   bases in one line,
+   `go by <handle>; branches change/<id>: <repo> <sha7>[, <repo> <sha7>]`.
+   A repo that `pod.yaml` names and the spec does not gets no branch and no
+   branch command; verify uses its pin. Create each branch once. If it
+   already exists, as after a spec amendment, keep it.
 4. Dispatch every task whose `after` list is empty, the test-writing tasks
    among them, then keep dispatching each cycle as below.
 
@@ -244,7 +260,12 @@ Each role has a lane: the only files you file from its result.
    `T<n> <status>[, <repo> <sha7>..<sha7>][, unit <p>/<n> pass]`. For a
    build task, then dispatch its review to a fresh review agent with the
    brief, the report and the task's diff from base to head, never the
-   builder's session.
+   builder's session, and record the review task's dispatch line, as in
+   step 5 of "Briefs and dispatch":
+   `dispatch T<m> -> review (<local|mesh>, <env class|any>)`, with `T<m>`
+   the plan's review task for `T<n>`. Every review you dispatch, a fix
+   round's re-review and the whole-change review included, gets its
+   dispatch line.
 4. For a mesh result, check each returned file against its `files:` entry:
    the space-relative path, the sha256, text only, at most 1048576 bytes.
 5. File only what is in the role's lane. A local agent's files are those it
