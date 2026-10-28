@@ -392,14 +392,17 @@ skill reads it the same way.
 
 ### Heavy checks
 
-A check expected to take over 60 s is heavy; each test records its expected
-run time. Before you dispatch a task that runs a heavy check, give the human
-the command, its caps and the expected wall time in s, wait for the human's
-word, and record
-`heavy: asked <handle> before T<n>: <command name>; caps <caps>; expected <s> s`.
-The check then runs under the mesh's solver-run fence and budget policy, like
-any solver run. With no human present, the budget policy decides, and
-nothing runs past it.
+Each test records its expected run time. Judge heaviness per check, from that
+check's own recorded expected run time alone: over 60 s is heavy, 60 s or
+less is not, whatever its cap, its label or the task's total time. Before you
+dispatch a task that runs a heavy check, give the human the command, the caps
+and the expected wall time in s of each heavy check, and of no other check,
+wait for the human's word, and record
+`heavy: asked <handle> before T<n>: <command name>; caps <caps>; expected <s> s`
+for each. A task with no heavy check needs no such ask. A heavy check then
+runs under the mesh's solver-run fence and budget policy, like any solver
+run. With no human present, the budget policy decides, and nothing runs past
+it.
 
 ### Requirement edits
 
