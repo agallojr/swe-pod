@@ -396,11 +396,13 @@ Each test records its expected run time. Judge heaviness per check, from that
 check's own recorded expected run time alone: over 60 s is heavy, 60 s or
 less is not, whatever its cap, its label or the task's total time. A check
 that records no expected run time, such as a unit suite or a declared quality
-check, takes it from its brief or from the record of its last run; with
-neither, treat it as heavy and ask. Before you dispatch a task that runs a
-heavy check, give the human the command, the caps and the expected wall time
-in s of each heavy check, and of no other check, wait for the human's word,
-and record
+check, takes it from its brief or from the record of its last run when
+either gives one, and is heavy only when that time is over 60 s. With no
+known time, it is not heavy for the lead's ask, and the running agent's own
+fence still binds the run. Before you dispatch a task that runs a heavy
+check, give the human the command, the caps and the expected wall time in s
+of each heavy check, and of no other check, wait for the human's word, and
+record
 `heavy: asked <handle> before T<n>: <command name>; caps <caps>; expected <s> s`
 for each. A task with no heavy check needs no such ask. A heavy check then
 runs under the mesh's solver-run fence and budget policy, like any solver
