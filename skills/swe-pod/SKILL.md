@@ -74,21 +74,30 @@ Quality section; with no such section it declares none.
 
 The plan's tasks are its entries in sections 5 to 8:
 
-- each heading `### T<n> <title>` that names one task id;
+- each heading `### T<n> <title>` that opens with one task id;
 - each row of a task table whose first cell is a task id, as plan section 7
   lists its review tasks.
 
 A task id is `T` and a number, with an optional lowercase letter (`T19a`).
-Some fields are stated once for several tasks: by a heading that names
-several ids, such as `### T19a and T19b <title>`, which is not itself a
-task, or by the sentence above a table. Each task takes those fields from
+A heading opens with the ids before its title, joined by `, ` or `and`;
+ids in the title do not count, so `### T21 Review of T1` is the task T21.
+Some fields are stated once for several tasks: by a heading that opens
+with several ids, such as `### T19a and T19b <title>`, which is not itself
+a task, or by the sentence above a table. Each task takes those fields from
 there. In an `after:` list, `T<a> to T<b>` means every plan task numbered
 from a to b, letter suffixes included; text after the closing bracket is a
 comment.
 
-A **review task** is a task whose role is review. One from the review
-table reviews the task in its Reviews column. The whole-change review
-reviews no single task.
+A **review task** is a task whose role is review. The whole-change review,
+the one whose heading title is `Whole-change review`, reviews no single
+task. Any other review task reviews the task given by the first of these
+it has:
+
+1. its Reviews cell, in a review table: the task id the cell begins with;
+2. its heading, `### T<n> Review of T<m>`: T<m>;
+3. its `after:` list, when that list names one task: that task.
+
+With none of them, it reviews no single task.
 
 ### 1.4 Reading the ledger
 
@@ -112,6 +121,10 @@ says so, and otherwise only for the "As of" time.
 - **Fix-round line:** an event that begins `T<n> fix round`.
 - **At-base and returned-to-test lines:** events that begin `T<n> at base:`
   and `T<n> returned to test:`.
+- **Ruling on findings:** an event that begins
+  `Ruling: T<n> open findings`. It closes the Critical and Important
+  findings then open on `T<n>`, at any fix round, a whole-change review's
+  included (`status-format.md`, "Open findings").
 - **Go line:** an event that begins `go`.
 - **Held:** an event `approval reopened for <Rn>; held T<a>[, T<b>]` holds
   those tasks until a later `spec approved by <handle>` event.
@@ -146,17 +159,22 @@ every result verify must give (`PROCESS.md §7`), and nothing in it is
 `fail` or `not-run`:
 
 - every scenario of the spec, by its id;
-- every regression result it lists, under a qualified id `<change>/<Rn.Sm>`;
-  when the space's `tests/` holds tests, it lists at least one;
+- every test file `test_*.md` in `changes/<id>/tests/`, under the key
+  that section 5, step 4, maps it to, such as `I<n>` under `x-checks:`;
+- every regression test: for each archived change,
+  `changes/archive/<yyyy-mm-dd>-<change>/`, each row of its plan's test map
+  whose test file, `<test name>.md`, is under the space's `tests/`, under
+  `scenarios:` as `<change>/<Rn.Sm>`, with `<Rn.Sm>` from the row;
 - each repo in the spec's `repos:` under `unit:`, as `pass` or
   `none-present`;
 - every quality check the spec declares, under `quality:`. A spec that
-  declares none needs `quality: none-declared`;
-- every key under `x-checks:` and `x-suggestions:`, when present.
+  declares none needs `quality: none-declared`.
 
 A missing result is not a pass: a record with a result for Q1 only, for a
 spec that declares Q1 and Q2, is not green, and the change is not verified
-(R12.S1).
+(R12.S1). Nor is a record with no `x-checks:` while `changes/<id>/tests/`
+holds `test_I1_<slug>.md`, or one with a result for one regression test of
+ten.
 
 ## 2. Where things stand
 

@@ -83,12 +83,15 @@ and the file ends with one newline.
   at the current commit set, then `: ` and its results, joined by `, `:
   - `scenarios <p>/<n> pass`, where `<n>` counts the spec's scenarios and
     `<p>` those the record passes;
+  - `regression <p>/<n> pass` over the regression tests (`SKILL.md`
+    section 1.6), only when `<n>` is not 0;
   - `unit <repo> <pass|fail|none-present|missing>` for each repo in the
     spec's `repos:` list, in that order;
   - `quality none-declared`, or `quality <p>/<n> pass` over the checks the
     spec declares;
-  - `x-checks <p>/<n> pass` and `x-suggestions <p>/<n> pass`, each only when
-    the record has that key.
+  - `x-checks <p>/<n> pass` and `x-suggestions <p>/<n> pass`, where `<n>`
+    counts the test files in `changes/<id>/tests/` that map to that key
+    (`SKILL.md` section 5, step 4), each only when `<n>` is not 0.
 - **open findings:** the totals of section "Open findings", below.
 - **next:** one of these, by the change's state:
 
@@ -122,9 +125,9 @@ Decide each task's state by the first of these that holds. The ledger terms
 
 1. **done.**
    - A build task: it has reported, and its review is closed.
-   - A review task: the review of the task it reviews is closed. The
-     whole-change review reviews no single task, so its own review lines
-     count.
+   - A review task: the review of the task it reviews (`SKILL.md` section
+     1.3) is closed. One that reviews no single task, such as the
+     whole-change review, counts its own review lines.
    - A test or lead task: it has reported.
 2. **blocked.** Its newest status line, later than its newest dispatch
    line, is BLOCKED or NEEDS_CONTEXT.
@@ -139,7 +142,7 @@ Decide each task's state by the first of these that holds. The ledger terms
 
 A task's events are the dispatch, status, fix-round, at-base and
 returned-to-test lines that name it. A review task's events are the review
-lines of the task it reviews (its own, for the whole-change review). The
+lines of the task it reviews (its own, when it reviews no single task). The
 newest is the one with the latest UTC, and of those the one written last.
 The cell is its UTC, a space, and the event in this form:
 
@@ -163,9 +166,11 @@ The ledger's review and fix-round lines give the counts.
   its newest review or fix-round line. A review line gives its Critical and
   Important counts. A fix-round line gives its `<o> open` findings, counted
   as Critical up to the number of Critical findings in the review before
-  it, and the rest as Important. A `Ruling:` line after the task's fifth fix
-  round that names the task closes its open findings. Add the counts over
-  all tasks.
+  it, and the rest as Important. A ruling closes them at any round: when a
+  `Ruling:` line newer than that line begins `Ruling: T<n> open findings`,
+  as in `Ruling: T<n> open findings parked: <which>; <why>; <cost if wrong>`,
+  the task counts 0. A `Ruling:` line in another form closes nothing. Add
+  the counts over all tasks.
 - **Minor.** The sum of the Minor counts of every review line of the
   change. Minor findings wait for the whole-change review and the final
   report's deferred minors, so none closes before integrate.
