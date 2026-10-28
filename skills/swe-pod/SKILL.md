@@ -39,8 +39,9 @@ for each change its `spec.md`, `plan.md`, `ledger.md` and `evidence/`, then
 - **Code repos, read-only.** For a branch head, run
   `git ls-remote <remote> refs/heads/change/<id>` with the remote from
   `pod.yaml`. For commits, fetch the branch into a local clone and read its
-  log (section 5). Never commit, push, check out, rebase or create a branch
-  in a code repo from this skill.
+  log (section 5). In sections 2, 3 and 5, never commit, push, check out,
+  rebase or create a branch in a code repo. Section 4 acts as the lead, and
+  there the lead's own definition says what it does in a code repo.
 - **Branch head.** The head of `change/<id>` in a repo is given by the
   first of these that holds:
   1. the remote can be read (`git ls-remote` exits 0) and lists the
@@ -50,11 +51,13 @@ for each change its `spec.md`, `plan.md`, `ledger.md` and `evidence/`, then
   3. the remote cannot be read (`git ls-remote` exits non-zero, as for a
      placeholder URL or a host that does not resolve): taken from the
      records. It is the end sha of the newest ledger range for that repo,
-     in the event order of 1.4:
-     a status line's `<repo> <sha7>..<sha7>`, or a fix-round line's
-     `<sha7>..<sha7>` for a task whose plan entry has `repo: <repo>`. With
-     no such range, it is that repo's sha on the go line. With neither, it
-     is none, written `<repo> missing`.
+     in the event order of 1.4. A range for that repo is one written
+     `<repo> <sha7>..<sha7>` on any task's line, or a fix-round line's
+     bare `<sha7>..<sha7>` when the task's plan entry names that repo
+     alone in `repo:`; a bare range of a task whose entry names several
+     repos is a range for none of them. With no such range, it is that
+     repo's sha on the go line. With neither, it is none, written
+     `<repo> missing`.
 
   Rule 3 reads only committed records, so two agents that cannot read a
   remote give the same head. Every rule that needs a branch head (1.5,
@@ -187,22 +190,29 @@ result verify must give (`PROCESS.md §7`), and nothing in it is `fail` or
 - every scenario of the spec, by its id;
 - every test file `test_*.md` in `changes/<id>/tests/`, under the key
   that section 5, step 4, maps it to, such as `I<n>` under `x-checks:`;
-- every regression test: each file `test_*.md` under the space's `tests/`,
-  in that folder or any folder below it, under `scenarios:` as
-  `<change>/<Rn.Sm>`. Its test name is the file name without `.md`. Its
-  `<change>` and `<Rn.Sm>` come from the first of these that names it:
-  1. a row of the test map in an archived plan,
-     `changes/archive/<yyyy-mm-dd>-<change>/plan.md`, with that test name:
-     that change, and the row's scenario id;
-  2. a row of the `## Scenarios` table in an archived final report,
-     `changes/archive/<yyyy-mm-dd>-<change>/report.md`, with that test
-     name: that change, and the row's scenario;
-  3. the test's own front matter: its `scenario:` value, when it is
-     written `<change>/<Rn.Sm>`.
+- every regression test: each file `test_*.md` directly in a folder
+  `tests/<change>/` of the space, where integrate puts a change's tests
+  (`PROCESS.md §8`), and each one directly in `tests/` itself. A
+  `<change>` folder counts only when `changes/archive/<yyyy-mm-dd>-<change>/`
+  exists. Nothing deeper counts: fixture data such as
+  `tests/<change>/fixtures/` holds no test of the suite. A test's name is
+  its file name without `.md`, and its key is `<change>/<value>`:
+  - `<change>`: for a test in `tests/<change>/`, that folder's name. For
+    one directly in `tests/`, the archived change whose plan test map has
+    a row with that test name, else the one whose final report's
+    `## Scenarios` table has such a row; where several do, the one whose
+    archive folder name sorts last. With neither, the change of a
+    `scenario:` value written `<change>/<value>`.
+  - `<value>`: the scenario id in that change's row, from its archived
+    plan test map, else from its archived report's `## Scenarios` table.
+    With no such row, the test's `scenario:` front-matter value, less any
+    `<change>/` part. With no `scenario:` value either, the key its file
+    name maps to by section 5, step 4 (`test_I1_<slug>` gives `I1`).
 
-  Where several archived changes name it at one step, the one whose folder
-  name sorts last gives it. A test that none of these keys still counts,
-  and its result is missing;
+  A key `<change>/R<n>.S<m>` is looked for under `scenarios:`,
+  `<change>/I<n>` under `x-checks:` and `<change>/T<n>.TS<k>` under
+  `x-suggestions:`. A test with no key still counts, and its result is
+  missing;
 - each repo in the spec's `repos:` under `unit:`, as `pass` or
   `none-present`;
 - every quality check the spec declares, under `quality:`. A spec that
@@ -300,7 +310,10 @@ it.
 ## 4. Go
 
 "Go" and "do the next thing" mean acting as the change's lead: follow the
-`swe-lead` definition (swe-pod `agents/swe-lead.md`) for that change.
+`swe-lead` definition (swe-pod `agents/swe-lead.md`) for that change. Its Go
+step applies as written: at the go it makes and pushes each `change/<id>`
+itself when the pod commit scope allows it, and otherwise gives the human
+the commands.
 
 1. Read the spec's header. With no `approved:` line, dispatch nothing and
    say exactly, with the id filled in:
@@ -310,9 +323,10 @@ it.
    ```
 
 2. Read the change's state and its tasks (section 1). The ready tasks are
-   those in state ready (`status-format.md`, "Task states"): with no
-   dispatch line yet, and whose `after` tasks are all done, or, for the
-   review of one task, whose task has reported. The first of them, in task
+   those in state ready (`status-format.md`, "Task states"): not held,
+   with no dispatch line yet, and whose `after` tasks are all done, or, for
+   the review of one task, whose task has reported and every other task in
+   its `after` list is done. The first of them, in task
    order, is the next task. With none ready, a verify shard that is done
    and whose latest record is out of date (1.7) is next: it runs again at
    the current commit set, as 1.7 says.
@@ -379,7 +393,8 @@ BREAK evidence-stale <ev id>
 ## What it writes
 
 In its own steps this skill writes one record, `STATUS.md`, and only
-through the space's librarian. When it acts as the lead (section 4), the
-`swe-lead` definition says what the lead writes. It writes nothing in a code
-repo, and nothing outside the shareable profile: no hostname, agent id, mesh
-task id, home path or credential name.
+through the space's librarian, and it writes nothing in a code repo. When
+it acts as the lead (section 4), the `swe-lead` definition says what the
+lead writes, each `change/<id>` it makes at the go included. It writes
+nothing outside the shareable profile: no hostname, agent id, mesh task id,
+home path or credential name.
