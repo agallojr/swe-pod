@@ -1,0 +1,216 @@
+# STATUS.md format
+
+`STATUS.md` sits at the root of a Project Space. The `swe-pod` skill builds
+it from the records, as read in `SKILL.md` section 1, and nobody edits it by
+hand (`PROCESS.md §15`). This file fixes its text, so two agents that build
+it from the same records write the same bytes.
+
+## Layout
+
+The lines below are exact. Text in `<angle brackets>` is filled in by the
+rules that follow; everything else is copied as written.
+
+```text
+# Status: <space id>
+
+Generated from the records; never edited by hand. As of <UTC of the newest ledger line or record>.
+
+- pins: <repo> <sha7>, ...
+- open changes: <n> (<state>: <k>, ...)
+
+## <id>   state: <state>   owner: <handle>
+
+- gates: <gate> <handle> <UTC>, ...
+- branches: change/<id>: <repo> <sha7>, ...
+- tasks: waiting <k>, ready <k>, dispatched <k>, done <k>, blocked <k>
+
+| task | role | runs | state | latest |
+|---|---|---|---|---|
+| T<n> | <role> | <local or mesh> | <task state> | <UTC> <event> |
+
+- latest evidence: <ev id>, <env>, <green|not green>: <results>
+- open findings: Critical <n>, Important <n>, Minor <n>
+- next: <next>
+```
+
+One `## <id>` section follows the header for each open change, in byte
+order of the change ids, each with its bullets and task table in the order
+shown. Blocks are separated by one empty line. No line has trailing spaces,
+and the file ends with one newline.
+
+## Header
+
+- **Space id:** the `id:` value in `space.yaml`, such as `proj:demo`.
+- **As of:** the newest UTC, as `YYYY-MM-DDTHH:MMZ`, among:
+  - every ledger line under `changes/`, `changes/archive/` included;
+  - the UTC in the name of each record under `changes/*/evidence/`,
+    `handoffs/` and `decisions/`, written back with its dashes and colon
+    (`20261102T1412Z` is `2026-11-02T14:12Z`);
+  - the UTC on each `approved:`, `integrated:` or `abandoned:` line in a
+    spec's header (`SKILL.md` section 1.2).
+
+  With none of these yet, the line ends `As of no records yet.`
+- **pins:** each repo under `repos:` in `pod.yaml`, in the order written,
+  as `<repo> <sha7>`: its name and the first 7 hex digits of its `pin`,
+  joined by `, `.
+- **open changes:** `<n>` is the number of changes in state proposed,
+  approved, planned, building or verified. The parenthesis lists each of
+  those states that has at least one change, in that order, as
+  `<state>: <k>`, joined by `, `. With no open change the line is
+  `- open changes: 0`.
+
+## Per open change
+
+- **Heading:** the change id, its state (`SKILL.md` section 1.2) and the
+  handle on the `owner:` line of the spec's header, separated as shown by
+  three spaces.
+- **gates:** the gates passed, in this order:
+  - `spec <handle> <UTC>` for each `approved:` line in the spec's header,
+    in the order written;
+  - `go <handle> <UTC>` for the ledger's go line (`go by <handle>; ...`).
+    A go line that names no handle gives `go <UTC>`.
+
+  With none passed, the bullet is `- gates: none`.
+- **branches:** before the go line, `- branches: none yet`. After it, each
+  repo in the spec's `repos:` list, in that order, as `<repo> <sha7>`, the
+  head of `change/<id>` on that repo's remote. A repo whose remote has no
+  such branch is `<repo> missing`.
+- **tasks:** the number of tasks in each task state, in the order shown,
+  zeros included. Then an empty line and the task table.
+- **latest evidence:** `- latest evidence: none` until the change has an
+  evidence record. Then the newest record (`SKILL.md` section 1.6) as
+  `<ev id>, <env>, <green|not green>`, followed by `, stale` when it is not
+  at the current commit set, then `: ` and its results, joined by `, `:
+  - `scenarios <p>/<n> pass`, where `<n>` counts the spec's scenarios and
+    `<p>` those the record passes;
+  - `unit <repo> <pass|fail|none-present|missing>` for each repo in the
+    spec's `repos:` list, in that order;
+  - `quality none-declared`, or `quality <p>/<n> pass` over the checks the
+    spec declares;
+  - `x-checks <p>/<n> pass` and `x-suggestions <p>/<n> pass`, each only when
+    the record has that key.
+- **open findings:** the totals of section "Open findings", below.
+- **next:** one of these, by the change's state:
+
+  | State | `next:` |
+  |---|---|
+  | proposed | `next: approval of changes/<id>/spec.md, by the human` |
+  | approved | `next: the plan, by the plan role` |
+  | planned | `next: the go, by the human` |
+  | building, verified | the first ready task, as `next: T<n> -> <role> (<local or mesh>, <env class or any>)`, with `runs:` and `needs:` from the plan |
+
+  When a building or verified change has no ready task, the bullet is
+  `next: none ready; dispatched: T<a>, T<b>`, adding `; blocked: T<c>` when
+  any task is blocked and leaving out a list that would be empty. When every
+  task is done, it is `next: none; every task is done`.
+
+## The task table
+
+One row per plan task (`SKILL.md` section 1.3), in task order: by number,
+with a letter suffix after the bare number (`T19`, `T19a`, `T19b`, `T20`).
+
+- **task:** the id, `T<n>`.
+- **role:** the first word of the task's `role:` field.
+- **runs:** `local` or `mesh`, from its `runs:` field.
+- **state:** one of the five task states, below.
+- **latest:** the task's newest event, as below, or `-` when it has none.
+
+### Task states
+
+Decide each task's state by the first of these that holds. The ledger terms
+(reported, review closed, held) are defined in `SKILL.md` section 1.4.
+
+1. **done.**
+   - A build task: it has reported, and its review is closed.
+   - A review task: the review of the task it reviews is closed. The
+     whole-change review reviews no single task, so its own review lines
+     count.
+   - A test or lead task: it has reported.
+2. **blocked.** Its newest status line, later than its newest dispatch
+   line, is BLOCKED or NEEDS_CONTEXT.
+3. **dispatched.** A dispatch line names it. A review task is also
+   dispatched once the task it reviews has reported: the lead dispatches a
+   review as soon as it records the report, and writes no dispatch line
+   for it.
+4. **ready.** It is not held, and every task in its `after` list is done.
+5. **waiting.** Anything else, held tasks included.
+
+### Latest
+
+A task's events are the dispatch, status, fix-round, at-base and
+returned-to-test lines that name it. A review task's events are the review
+lines of the task it reviews (its own, for the whole-change review). The
+newest is the one with the latest UTC, and of those the one written last.
+The cell is its UTC, a space, and the event in this form:
+
+| Event | Cell text after the UTC |
+|---|---|
+| dispatch | `dispatch -> <role> (<local or mesh>, <env class or any>)` |
+| status | the status word, then `, <repo> <sha7>..<sha7>` and `, unit <p>/<n> pass` when the line has them in that form; nothing else |
+| `T<n> complete`, in words | `DONE` |
+| review | `review: ` or `review r<k>: `, then `spec ok` or `spec issues`, then `; ` and its counts as `<k> <Severity>` in the order Critical, Important, Minor, joined by `, `, without file and line; `none` when it lists no finding |
+| fix round | `fix round <r>/5: <a> addressed, <o> open` |
+| at base | `at base: <f> fail, <p> pass`, counting the tests the line names |
+| returned to test | `returned to test: <test name>` |
+
+A `|` inside a cell is written `\|`.
+
+## Open findings
+
+The ledger's review and fix-round lines give the counts.
+
+- **Critical and Important.** For each task that has a review line, take
+  its newest review or fix-round line. A review line gives its Critical and
+  Important counts. A fix-round line gives its `<o> open` findings, counted
+  as Critical up to the number of Critical findings in the review before
+  it, and the rest as Important. A `Ruling:` line after the task's fifth fix
+  round that names the task closes its open findings. Add the counts over
+  all tasks.
+- **Minor.** The sum of the Minor counts of every review line of the
+  change. Minor findings wait for the whole-change review and the final
+  report's deferred minors, so none closes before integrate.
+
+## Same records, same text
+
+- Nothing comes from the wall clock, the session, the node or the space's
+  own commit sha. Every UTC is copied from a record.
+- Every list follows a fixed order given above: `pod.yaml` order for pins,
+  the spec's order for repos and approvals, byte order for change ids, task
+  order for tasks.
+- Every empty case has its fixed text: `none`, `none yet`, `-`, `0`.
+- The records are read as committed (`SKILL.md` section 1.1), and branch
+  heads from the remotes, so the text changes only when a record, a pin or
+  a branch head changes.
+
+## Example
+
+A space `proj:demo` with one change, `add-greeting`, in one repo, at a
+fictional state:
+
+```markdown
+# Status: proj:demo
+
+Generated from the records; never edited by hand. As of 2026-11-02T15:20Z.
+
+- pins: greeter 77b01d4
+- open changes: 1 (building: 1)
+
+## add-greeting   state: building   owner: ana
+
+- gates: spec ana 2026-11-01T15:20Z, go ana 2026-11-02T14:00Z
+- branches: change/add-greeting: greeter 8e1d0c4
+- tasks: waiting 3, ready 0, dispatched 2, done 1, blocked 0
+
+| task | role | runs | state | latest |
+|---|---|---|---|---|
+| T1 | build | local | dispatched | 2026-11-02T14:41Z DONE, greeter 77b01d4..8e1d0c4, unit 14/14 pass |
+| T2 | test | mesh | done | 2026-11-02T15:20Z at base: 2 fail, 0 pass |
+| T3 | review | local | dispatched | 2026-11-02T14:50Z review: spec ok; 1 Important |
+| T4 | test | mesh | waiting | - |
+| T5 | review | local | waiting | - |
+| T6 | lead | local | waiting | - |
+
+- latest evidence: none
+- open findings: Critical 0, Important 1, Minor 0
+- next: none ready; dispatched: T1, T3
+```
