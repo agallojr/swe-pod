@@ -654,7 +654,11 @@ space's current pins and `tests/`.
    `changes/<id>/tests/` into `tests/`, as the folder `tests/<id>/`;
    advance every affected pin; mark
    `integrated:` on the spec; move the folder to
-   `changes/archive/<yyyy-mm-dd>-<id>/`. Docs that ship with the code are
+   `changes/archive/<yyyy-mm-dd>-<id>/`. The librarian makes that commit in
+   its integrate mode (agent-mesh `skills/space-librarian/SKILL.md`, section
+   3): the two moves are its renames, the tests' move first, and each edited
+   or new file is a record, named by its path after the moves.
+   Docs that ship with the code are
    updated by a build task before the merge; project docs in the space
    (README, decisions) are updated by you here. Give each open plan that
    depended on this change a ledger line naming what moved.
