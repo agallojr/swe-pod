@@ -451,7 +451,12 @@ or Important finding. Nothing merges without the human's word.
    advance every affected pin, file
    `spec.md` in the spec role's lane once the spec author, at your request,
    has added `integrated: <handle> <UTC>`, and move the folder to
-   `changes/archive/<yyyy-mm-dd>-<id>/`. Update the project docs in the
+   `changes/archive/<yyyy-mm-dd>-<id>/`. Make that commit with the
+   librarian's integrate mode (agent-mesh
+   `skills/space-librarian/SKILL.md`, section 3): hand it the two moves as
+   renames, the tests' move first, and `pod.yaml`, `spec.md` and every
+   other file you edited or wrote as records, each named by its path after
+   the moves. Update the project docs in the
    space; docs that ship with the code were updated by a build task before
    the merge. Give each open plan that depended on this change a ledger line
    naming what moved.
