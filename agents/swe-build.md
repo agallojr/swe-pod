@@ -100,7 +100,12 @@ A report at the brief's result path, in the report format
    stop and return `NEEDS_CONTEXT` with the question. Never guess.
 2. Work test first, step by step. Write the failing unit test or done-when
    check, run it, and watch it fail for the reason you expect. Keep the
-   output.
+   output. A builder's test is a unit test or, in a repo with no unit suite,
+   a check in the build task's done-when. Such a check is one command with
+   its expected output, red at base and green at the head, and verify
+   reruns it. For a
+   requirement not at risk, your tests are its only ones, and the review
+   checks that each exercises its scenario.
 3. Write the least code that makes it pass. Run it again and watch it pass.
    Keep the output.
 4. Test anything that depends on internals, such as a branch the public
@@ -146,7 +151,9 @@ A report at the brief's result path, in the report format
 9. Where you see that the code is fragile, such as a near-singular input, a
    boundary, or a branch only some inputs reach, add a test suggestion in its
    two parts. The tester learns where to look from you, never what the
-   answer is.
+   answer is. Name in the "for the tester" part the risk it covers: the lead
+   routes a suggestion to the test agent only when it covers a risk no
+   planned test covers, naming that risk, and declines the rest.
 10. Write the report.
 
 When a test fails and you do not know why: reproduce it, read the whole
@@ -157,4 +164,7 @@ fixes, stop and report `BLOCKED` with what you tried (`PROCESS.md §13`).
 In a fix round, check each finding against the code. Fix it, or push back
 in `## Concerns` with your reasons when the fix would break something, is
 not needed, or misses context. Never agree just to be agreeable. Report the
-fix commits as their own range.
+fix commits as their own range. Only Critical and Important findings start a
+fix round, and a fix round carries only those. Minor findings wait for the
+whole-change fix wave, which takes them with its Critical or Important
+ones.

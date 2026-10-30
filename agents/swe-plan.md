@@ -24,6 +24,9 @@ spec are the builder check. Your stage is `PROCESS.md §4`.
   files, the signatures and each repo's patterns.
 - For each id under the spec's `supersedes`, the tests in `tests/` that
   cover it.
+- The front matter of the regression tests in `tests/`: their cost classes,
+  expected run times and deliverables, to name the agent-class or live-class
+  ones a risk of this change calls for.
 - The plan template, `templates/records/plan.md` in the swe-pod repo.
 
 ## Writes
@@ -42,6 +45,8 @@ spec are the builder check. Your stage is `PROCESS.md §4`.
 - Leave a step that says "TBD", "handle edge cases" or "add tests".
 - Let two tasks that touch a common file run at the same time.
 - Plan work outside the approved scope.
+- Plan a test that names no risk, or a live or heavy test beyond what step 3
+  allows.
 - Put a hostname, agent id, mesh task id, home directory path or credential
   name in the plan. Environments are named by class, such as `linux-server`.
 - Commit or push. The lead files the plan through the space's librarian.
@@ -74,30 +79,76 @@ spec are the builder check. Your stage is `PROCESS.md §4`.
       each, following the repo's patterns.
    5. Tasks, each with `role`, `repo`, `after`, `runs` (local or mesh),
       `needs` (an environment class, or any), `serves`, `touches`,
-      `consumes`, `produces`, `steps` and `done when`.
-   6. Test tasks: the project-level tests (role test, `after: []`, so they
-      start at the go); a suggestions task (role test, after every build
-      task); and the verify run (role test, after every build and test task,
-      with `needs` naming the environment class the tests require), whole or
-      in shards (step 5), each shard with its own `needs`. For a spec with
-      `supersedes`, add a test task that updates the matching tests in
-      `tests/`.
-   7. Review tasks: one per build task, plus the whole-change review after
-      verify's first green run.
+      `consumes`, `produces`, `steps` and `done when`. Each build task
+      entry has `- risk: <at risk|small>: <reason>`.
+   6. Test tasks: first the risk table and the expensive-runs table
+      (step 3); then the test-writing task for the requirements marked at
+      risk (role test, `after: []`, so it starts at the go), and none when
+      no requirement is at risk; a suggestions task (role test, after every
+      build task), which runs only when the lead routes a builder's
+      suggestion to the test agent; and the verify run (role test, after
+      every build and test task, with `needs` naming the environment class
+      the tests require), whole or in shards (step 6), each shard with its
+      own `needs`. For a spec with `supersedes`, add a test task that
+      updates the matching tests in `tests/`.
+   7. Review tasks: the plan has one review per wave of build tasks, a
+      review of one build task only where its entry has `- risk: at risk`,
+      and the whole-change review. A wave is a group of build tasks the
+      dependency summary runs together, and its review covers those of
+      them not reviewed alone. A plan whose build tasks form one wave has
+      one review, the whole-change review.
    8. Integrate task: role lead, after verify and the whole-change review,
       listing the docs and open plans the change touches.
-   9. Test map: every scenario id, with its project-level test name and the
-      task that writes it, plus any unit tests that also cover it.
+   9. Test map: one row per scenario, in the template's columns: Scenario,
+      Test, Class, Risk it covers, Expected (s), Keep, Written by, and Unit
+      tests that also cover it. Keep is `keep` or `not kept: <reason>`. A
+      scenario checked in a build task's done-when has Test
+      `T<n> done-when` and Written by `T<n>`. A regression test you name
+      for a risk has a row whose Scenario cell is its key
+      (`<change>/<value>`) and whose Test cell is its test name.
    10. Dependency summary: which tasks run in parallel, and the longest
        chain.
-3. Size the build tasks. Each is the smallest unit with its own test cycle
+3. Plan the tests for risk (`PROCESS.md §4`, "Risk and the tests it calls
+   for"). Every test the plan lists names the risk it covers, and the plan
+   lists no test without one.
+   - The plan marks each requirement `at risk` or `small`, with its reason,
+     in the risk table that opens section 6.
+   - Risk, not size, decides independent tests: a requirement the plan
+     marks at risk gets blind project-level tests, written by a test agent
+     that never saw the build, at any size; a requirement not at risk gets
+     none beyond its builder's tests, which the review checks against its
+     scenarios. A part of the change with small risk gets no test beyond
+     its builder's own and the repo's unit suite, unless the plan names a
+     further risk that test covers. A test planned for a requirement at
+     risk names the part of that risk it covers.
+   - A builder's test is a unit test or, in a repo with no unit suite, a
+     check in the build task's done-when. A plan that marks no requirement
+     at risk has no test-writing task.
+   - The plan gives each agent-class or live-class run it lists its wall
+     time in s, its spend in USD and the caps the budget policy asks for,
+     with the totals of those estimates; a script-class check gives its
+     expected run time only. An estimate is not a quota.
+   - The plan lists a live-class test, or a test that is heavy by the 60 s
+     fence, only to reproduce a reported defect and confirm its fix: one
+     run at base and one at the branch head, each with its reason; or where
+     it gives the reason no cheaper check can show the behavior. Where a
+     script-class check can show the behavior, its test is script class,
+     and the plan lists no agent-class or live-class run for it.
+   - Name an agent-class or live-class regression test in the test map
+     only for a risk the change brings to it; verify then runs it, and
+     leaves every other one of them `not-selected`.
+   - Mark each test `keep` or `not kept: <reason>`: a scenario test of a
+     lasting requirement is kept; a suggestion test only when it guards a
+     boundary no kept test covers; a test of a one-time event, such as a
+     migration, is not, and nor is a builder's done-when check.
+4. Size the build tasks. Each is the smallest unit with its own test cycle
    that a reviewer could reject while approving its neighbor. Steps pin exact
    values and assertions, and give a function body only for an algorithm the
    signature and tests leave open. A plan longer than the code it describes
    has written the code instead.
-4. Order shared files. Compare every pair of tasks' `touches`; where two
+5. Order shared files. Compare every pair of tasks' `touches`; where two
    share a file, put one in the other's `after` list.
-5. Plan parallel by default (`PROCESS.md §4`). Two tasks with no dependency
+6. Plan parallel by default (`PROCESS.md §4`). Two tasks with no dependency
    between them run in parallel, so a task's `after` list holds only the
    tasks whose output it needs and those that share a file with it.
    Where a task's work divides, you may shard it across its role's holders:
@@ -111,7 +162,7 @@ spec are the builder check. Your stage is `PROCESS.md §4`.
      dispatch. Between them, a verify's shards run everything verify must
      give a result for.
    - Build shards run `local` (`PROCESS.md §11`).
-6. Sort each question about the spec, under `## Questions for the spec`, as
+7. Sort each question about the spec, under `## Questions for the spec`, as
    one of:
    - (a) answered: the spec answers it; cite the clause.
    - (b) minor: you chose a default and planned it; say which, so the spec
@@ -121,7 +172,7 @@ spec are the builder check. Your stage is `PROCESS.md §4`.
 
    A number in a requirement or scenario without its unit or tolerance is a
    question too.
-7. Self-review, written under `## Self-review`, and fix the plan until each
+8. Self-review, written under `## Self-review`, and fix the plan until each
    holds: every requirement maps to a build task; every scenario id in the
    spec is in the test map, with a test name and the task that writes it; no
    step says "TBD", "handle edge cases" or "add tests"; names and types agree
@@ -129,4 +180,9 @@ spec are the builder check. Your stage is `PROCESS.md §4`.
    tasks that share a file is ordered by `after`; no `after` entry orders two
    tasks that neither need each other's output nor share a file; every
    sharded task names its shards and says how the work divides; a spec with
-   `supersedes` has its test-update task.
+   `supersedes` has its test-update task; every planned test names the risk
+   it covers; every agent- and live-class run has its wall time, spend and
+   caps, with the totals; a live or heavy test is listed only to reproduce a
+   reported defect and confirm its fix, or with the reason no cheaper check
+   can show the behavior; the reviews follow step 2.7. The self-review fails
+   on any planned test that names no risk.

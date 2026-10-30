@@ -82,12 +82,19 @@ the file ends with one newline.
   zeros included. Then an empty line and the task table.
 - **latest evidence:** `- latest evidence: none` until the change has an
   evidence record. Then the newest record (`SKILL.md` section 1.6) as
-  `<ev id>, <env>, <green|not green>`, followed by `, stale` when it is not
-  at the current commit set, then `: ` and its results, joined by `, `:
+  `<ev id>, <env>, <green|not green>`, by the green rule of `SKILL.md`
+  section 1.6, followed by `, stale` when it is not at the current commit
+  set, then `: ` and its results, joined by `, `:
   - `scenarios <p>/<n> pass`, where `<n>` counts the spec's scenarios and
     `<p>` those the record passes;
-  - `regression <p>/<n> pass` over the regression tests (`SKILL.md`
-    section 1.6), only when `<n>` is not 0;
+  - `regression <p>/<n> pass[, <k> not-selected][, <j> superseded]` over
+    the regression tests (`SKILL.md` section 1.6), only when the space has
+    at least one. `<n>` counts the regression tests that need a pass,
+    `<p>` their passes, and `<k>` and `<j>` the regression tests whose
+    `not-selected` or `superseded` result is no bar; each bracketed part
+    only when its count is not 0. A record that passes 6 picked tests and
+    gives the other 84 `not-selected` shows
+    `regression 6/6 pass, 84 not-selected`;
   - `unit <repo> <pass|fail|none-present|missing>` for each repo in the
     spec's `repos:` list, in that order;
   - `quality none-declared`, or `quality <p>/<n> pass` over the checks the
@@ -108,12 +115,16 @@ the file ends with one newline.
   - The first line is `green` when the shards' latest records are green
     together (`SKILL.md` section 1.7). Its results are those above, over
     the latest records taken together: a result is a pass when one of them
-    passes it and none gives it `fail` or `not-run`. A repo's `unit` is
-    `fail` when one of them gives `fail`, else the first of `pass` and
-    `none-present` that one of them gives, else `missing`.
+    passes it and none gives it a bar (`SKILL.md` section 1.7); a
+    regression test with no pass counts toward `<k>` or `<j>` when one of
+    them gives it a `not-selected` or `superseded` result that is no bar
+    and none gives it a bar. A repo's `unit` is `fail` when one of them
+    gives `fail`, else the first of `pass` and `none-present` that one of
+    them gives, else `missing`.
   - A shard's line is `<shard id>: none` until the shard has a record.
-    Then it gives that record's id and `env`, `green` when nothing in it
-    is `fail` or `not-run`, and `, stale` when it is out of date. Its
+    Then it gives that record's id and `env`, `green` when no result in it
+    is a bar (a missing result aside), and `, stale` when it is out of
+    date. Its
     results are those above, but each `<n>` counts only the results of
     that kind the record gives, and a kind it gives none of is left out:
     `unit` for each repo the record lists, in the spec's `repos:` order,

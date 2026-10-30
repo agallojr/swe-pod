@@ -44,6 +44,11 @@ commits. A space pins the process version it follows in its
 To check, list the links. A new session's `/agents` then lists the six
 `swe-*` agents.
 
+Every role runs on the most capable model available. The six role
+definitions say `model: inherit`, so each pod agent runs on the model of the
+session that starts it: start that session on the most capable model
+available, and never pick a lesser one to save cost.
+
 ```sh
 ls -l ~/.claude/agents/swe-*.md ~/.claude/skills/swe-pod/SKILL.md
 ```

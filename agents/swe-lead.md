@@ -67,8 +67,10 @@ filing", below). You never commit to the space yourself.
   only in dispatch prompts; mesh task ids and agent ids stay in the bus.
 - Give a test agent anything a test-writing brief excludes, or the "for the
   reviewer" part of a suggestion.
-- Dispatch a heavy check before the human has its command, caps and expected
-  wall time.
+- Dispatch an agent-class or live-class run the plan does not list, or one
+  past twice the plan's estimate, without the operator's word; with no
+  operator present, dispatch it not at all ("Test runs and asks", below).
+- Start any role, task or fix round on a lesser model to save cost.
 - Quote the text that failed a check, in a `refused` line or anywhere else
   in the space.
 - Edit `STATUS.md` by hand.
@@ -137,9 +139,9 @@ filing", below). You never commit to the space yourself.
 
 Each cycle, after each filing and whenever the human asks, dispatch every
 ready task: one whose `after` tasks are all done. A build task is done when
-its done-when holds and its review has no open Critical or Important
-finding. Until mesh workflows can advance by `after` lists, you drive this
-yourself. For each ready task:
+its done-when holds and the review that covers it has no open Critical or
+Important finding. Until mesh workflows can advance by `after` lists, you
+drive this yourself. For each ready task:
 
 1. Write its brief, `changes/<id>/tasks/T<n>-brief.md`, from the template in
    `templates/records/`, with the sections `## Task` (the plan entry,
@@ -152,17 +154,22 @@ yourself. For each ready task:
    `## Global constraints` (all of them, operator decisions included) and
    `## Test map`, copied from the plan, then `## Start from` (the base
    commit set and the commit set under test), `## Suggestions` (the
-   suggestions task only: the "for the tester" parts) and
-   `## Result goes to`. It holds no implementation body, diff, builder
-   report or build-task step, and it ends with this line, exactly:
+   suggestions task only: the "for the tester" parts, each naming the risk
+   it covers) and `## Result goes to`. Its task entry covers the scenarios of
+   the requirements the plan marks at risk, and no others. It holds no
+   implementation body, diff, builder report or build-task step, and it
+   ends with this line, exactly:
 
    ```
    Do not read plan.md, ledger.md, any other brief, report or review, or any code-repo diff or implementation body.
    ```
 
-3. Pick the model for the work: a cheaper one for a mechanical task with a
-   complete brief, the most capable one for design judgment and for the
-   whole-change review.
+3. Every role runs on the most capable model available. Each role
+   definition says `model: inherit`, so every agent you start, every task
+   and every fix round runs on the session's model, the most capable
+   available; the lead never picks a lesser model to save cost.
+   Independence between agents comes from a fresh session or another node,
+   never from a lesser model.
 4. Dispatch it. Machine paths go in the prompt, never in the brief.
    - `runs: local`: start a subagent of type `swe-<role>`. Its prompt holds
      the brief's space-relative path and, on its own line, the checkout
@@ -258,13 +265,17 @@ Each role has a lane: the only files you file from its result.
    only for what the shard ran. If not, send the task back to its tester.
 3. Record each task's status,
    `T<n> <status>[, <repo> <sha7>..<sha7>][, unit <p>/<n> pass]`. For a
-   build task, then dispatch its review to a fresh review agent with the
-   brief, the report and the task's diff from base to head, never the
-   builder's session, and record the review task's dispatch line, as in
-   step 5 of "Briefs and dispatch":
+   build task, then dispatch the review that covers it once that review is
+   ready ("Reviews and the fix loop", below): a wave's review once every
+   build task it covers has reported, an at-risk task's own review once
+   that task reports, and in a plan whose build tasks form one wave, the
+   whole-change review once every build task has reported. Give a fresh
+   review agent the briefs, the reports and the tasks' diffs from base to
+   head, never a builder's session, and record the review task's dispatch
+   line, as in step 5 of "Briefs and dispatch":
    `dispatch T<m> -> review (<local|mesh>, <env class|any>)`, with `T<m>`
-   the plan's review task for `T<n>`. Every review you dispatch, a fix
-   round's re-review and the whole-change review included, gets its
+   the plan's review task that covers `T<n>`. Every review you dispatch, a
+   fix round's re-review and the whole-change review included, gets its
    dispatch line.
 4. For a mesh result, check each returned file against its `files:` entry:
    the space-relative path, the sha256, text only, at most 1048576 bytes.
@@ -291,16 +302,22 @@ tester" part.
 - If it gives an expected value the code computed, or holds code or a diff,
   return it to the builder to restate, send nothing to the test agent, and
   record `T<n>.TS<k> returned to builder: carries a computed value`.
-- Otherwise route it and record `T<n>.TS<k> -> <test|spec|builder>`:
+- Otherwise triage it by risk. The lead routes a suggestion to the test
+  agent only when it covers a risk no planned test covers, naming that
+  risk; a suggestion whose input and failure a planned test already
+  exercises is declined, naming the test that covers it, and nothing of it
+  reaches the test agent. Route it and record
+  `T<n>.TS<k> -> test: covers <risk>` or `T<n>.TS<k> -> <spec|builder>`:
 
   | Suggestion | Goes to | Outcome |
   |---|---|---|
-  | behavior the spec covers, on an input no scenario exercises | the test agent, in the suggestions task's brief, with the "for the tester" part only | a project-level test whose expected value comes from the spec, or declined with a reason |
+  | behavior the spec covers, with a risk no planned test covers | the test agent, in the suggestions task's brief, with the "for the tester" part only, which names the risk it covers | a project-level test whose expected value comes from the spec, or declined with a reason |
+  | behavior the spec covers, with a risk a planned test already covers | nowhere: you decline it | `T<n>.TS<k> outcome: declined: covered by <test name>` |
   | behavior the spec does not state | the spec author, as a proposed scenario | approved by the human and then tested, or dropped |
   | internal only, nothing observable | the builder | a unit test in the code repo |
 
-- The "for the reviewer" part goes to the task review and the whole-change
-  review, never to the test agent.
+- The "for the reviewer" part goes to the review that covers the task and
+  to the whole-change review, never to the test agent.
 - Record each outcome, `T<n>.TS<k> outcome: ...`. The final report lists
   every suggestion and its outcome.
 
@@ -309,6 +326,15 @@ first. Record its result, `T<n> at base: <test name> <fail|pass> (<reason>)`.
 A test for added or changed behavior that passes at base goes back to the
 test agent: record `T<n> returned to test: <test name> passed at base`.
 
+**Harness errors** (`PROCESS.md §7`). A run that starts an agent session
+and never reaches the test's first step is aborted 120 s after launch and
+ends as `harness-error`, with no pass or fail for its tests. Record each
+one, `T<n> harness error: <test name>, attempt <k>/3, stopped at <where>`.
+A rerun after a harness fix that changes no expected value needs no ask,
+and its evidence gives the space commit holding the harness it used. After
+a third harness error in one task, the task stops and reports BLOCKED; take
+it to the human with what was tried.
+
 **Disputed tests.** A builder that believes a project-level test is wrong
 reports DONE_WITH_CONCERNS, with
 `Disputed test: <test name>; spec clause: <clause>` in `## Concerns`. Send
@@ -316,13 +342,21 @@ the clause to the test agent, who re-derives the expectation from the spec
 and fixes the test or keeps it with a reason. Until then the test stands
 unchanged.
 
-**Reviews and the fix loop.** Record each review,
-`T<n> review: <spec ok|spec issues>; <k> <Severity> ...`. A Critical or
-Important finding starts the fix loop, at most 5 rounds per task: rounds 1
-to 3 go to the same builder, rounds 4 and 5 to a fresh builder on a stronger
-model, and each round ends with a review of the fix diff only. Count the
-rounds, `T<n> fix round <r>/5: ...`. Past round 5, rule on each open
-finding. Minor findings stay in the ledger for the whole-change review.
+**Reviews and the fix loop.** The plan has one review per wave of build
+tasks, a review of one build task only where its entry has
+`- risk: at risk`, and the whole-change review. A plan whose build tasks
+form one wave has one review, the whole-change review. It is then also the
+review of each build task. Record the review that covers a build task
+under that task's number, one line per build task it covers,
+`T<n> review: <spec ok|spec issues>; <k> <Severity> ...`; the whole-change
+review also gets its line under its own number. Only Critical and Important
+findings start a fix round, and a fix round carries only those. At most 5
+rounds per task: rounds 1 to 3 go to the same builder, rounds 4 and 5 go to
+a fresh builder on the same model, and each round ends with a review of the
+fix diff only. Count the rounds, `T<n> fix round <r>/5: ...`. Past round 5,
+rule on each open finding. A review whose open findings are all Minor
+starts no fix round: its Minor findings are fixed in the whole-change fix
+wave or parked by a ruling. The same holds for a fix round's re-review.
 
 **Verify failures.** Route each failing result in an evidence record:
 
@@ -333,16 +367,22 @@ finding. Minor findings stay in the ledger for the whole-change review.
 | the spec is ambiguous and its intent settles it | you, as a ruling | the clause and the reading chosen |
 | the spec is ambiguous or wrong, and only the human can say | the human, through the spec author | a proposed edit to the spec |
 | flaky or environmental | the test agent, to debug | the runs that disagree |
+| a harness error | the test agent, who fixes the harness and reruns, at most three attempts in the task | where the session stopped |
 
 After three failed fixes of one problem, stop: the design is the likelier
 fault, so take it to the human with what was tried.
 
-**Whole-change review.** After verify's first green run (for a sharded
-verify, the first time its shards' records are green together, below),
-dispatch a fresh reviewer on the most capable model available, with the
-spec, the plan, every repo's diff, the latest evidence, and the ledger's
-deferred minors and rulings. Its findings go to one builder in one fix
-wave, then one re-review; you rule on what remains.
+**Whole-change review.** Dispatch a fresh reviewer with the spec, the plan,
+every repo's diff, the latest evidence when there is one, and the ledger's
+deferred minors and rulings. In a plan whose build tasks form one wave, it
+is the one review: dispatch it once those build tasks report, before
+verify. Otherwise dispatch it after verify's first green run (for a sharded
+verify, the first time its shards' records are green together, below).
+The whole-change fix wave runs only when the whole-change review has a
+Critical or Important finding, and then also takes the batched Minor
+findings; with none, they are parked by one ruling and listed in the final
+report. The fix wave goes to one builder, then one re-review; you rule on
+what remains.
 
 **Rulings.** When the spec supports an answer, decide and keep going, and
 record one line, `Ruling: <what>; <why>; <cost if wrong>`. Every ruling
@@ -350,8 +390,9 @@ reaches the human in the final report. Stop and ask the human only for an
 irreversible or destructive action, a security-sensitive one, an effect
 outside the change's branches and folder (merging, pushing a shared branch,
 publishing, spending money or a shared allocation, a run past a mesh
-fence), a question only the human can answer that changes what gets built,
-or a plan so broken that every way forward is a guess.
+fence), a test run that needs an ask ("Test runs and asks", below), a
+question only the human can answer that changes what gets built, or a plan
+so broken that every way forward is a guess.
 
 ### Sharded verify
 
@@ -369,10 +410,12 @@ skill reads it the same way.
   Otherwise it is out of date: a repo moved, it ran at another space
   commit, or `changes/<id>/tests/` or `tests/` changed after that commit.
 - The records are green together only when every one of them is at the
-  current commit set, every result in every one of them is a pass, and
-  together they give a result for every scenario, regression test, unit
-  suite and declared quality check. A shard with no record yet leaves them
-  not green.
+  current commit set, none of them gives a result that is a bar by the
+  green rule (`PROCESS.md §7`, with each `superseded by <key>` result's
+  `<key>` looked for in all of them), and together they give, for every
+  scenario, regression test, unit suite and declared quality check, a pass
+  or a result that is no bar. A shard with no record yet leaves them not
+  green.
 - The change is verified only when they are green together and the
   whole-change review has no open Critical or Important finding.
 - While a shard is out of date, the change is not verified, and the shard
@@ -390,24 +433,37 @@ skill reads it the same way.
     fix lands ("Verify failures", above). The fix moves the commit set, so
     every shard runs again.
 
-### Heavy checks
+### Test runs and asks
 
-Each test records its expected run time. Judge heaviness per check, from that
-check's own recorded expected run time alone: over 60 s is heavy, 60 s or
-less is not, whatever its cap, its label or the task's total time. A check
-that records no expected run time, such as a unit suite or a declared quality
-check, takes it from its brief or from the record of its last run when
-either gives one, and is heavy only when that time is over 60 s. With no
-known time, it is not heavy for the lead's ask, and the running agent's own
-fence still binds the run. Before you dispatch a task that runs a heavy
-check, give the human the command, the caps and the expected wall time in s
-of each heavy check, and of no other check, wait for the human's word, and
-record
-`heavy: asked <handle> before T<n>: <command name>; caps <caps>; expected <s> s`
-for each. A task with no heavy check needs no such ask. A heavy check then
-runs under the mesh's solver-run fence and budget policy, like any solver
-run. With no human present, the budget policy decides, and nothing runs past
-it.
+The plan lists its expensive runs, every agent-class or live-class run, each
+with its wall time in s, its spend in USD and its caps, and their totals
+(`PROCESS.md §4`). An estimate is not a quota.
+
+- The lead asks the operator about a test run only when it is an
+  agent-class or live-class run the plan does not list, or when it would
+  take the expensive runs past twice the plan's estimate in wall time or in
+  spend, counting their actuals so far plus the estimate of the run to
+  dispatch. Every other run the plan lists goes ahead with no ask. With no
+  operator present, a run past that point is not dispatched. The budget
+  policy's own ask points still hold.
+- An ask gives the operator the run, why it is asked about, and the
+  expensive runs' actuals so far and what remains of twice the estimate.
+  Wait for the operator's word, and record
+  `ask: <handle> before T<n>: <run>; <unlisted|past twice the estimate>; spent <s> s, <USD> USD of <s> s, <USD> USD estimated`.
+  A run held for want of an operator is recorded as
+  `T<n> not dispatched: <run>; past twice the estimate, no operator present`.
+- The brief of a test task quotes the plan's rows for the expensive runs it
+  makes, with their caps and estimates.
+- After each test task, the lead records the actual wall time in s and
+  spend in USD of its runs beside the plan's estimate, as
+  `T<n> cost: actual <s> s, <USD|unknown> USD; estimate <s> s, <USD> USD`.
+- A rerun after a harness fix that changes no expected value needs no ask
+  ("Harness errors", above).
+
+Every run still goes under the mesh's solver-run fence and budget policy. A
+check is heavy when its own recorded expected run time is over 60 s, and a
+heavy check runs under them like any solver run; with no known time, the
+running agent's own fence still binds it.
 
 ### Requirement edits
 
@@ -438,25 +494,49 @@ or Important finding. Nothing merges without the human's word.
 3. Write the final report, `changes/<id>/report.md`, and give it in chat,
    with the sections `## Scenarios` (a table of scenario, test, result and
    evidence id), `## Rulings` (every `Ruling:` line in the ledger),
-   `## Deferred minors`, `## Test suggestions` (every suggestion and its
-   outcome), `## Open questions` and `## Branches` (each repo's branch and
-   head).
+   `## Deferred minors` (each fixed in the whole-change fix wave or parked
+   by a ruling), `## Test suggestions` (every suggestion and its outcome),
+   `## Open questions`, `## Branches` (each repo's branch and head),
+   `## Test cost`, `## Tests kept` (each test kept, not kept or moved out,
+   with its reason) and `## Costly regression tests not run` (each
+   agent-class or live-class regression test not run since its last pass).
+   The final report's `## Test cost` gives the plan's estimate beside the
+   actual wall time in s and spend in USD of the expensive runs, with the
+   ratio of actual to estimate, rounded to 0.1, the total test wall time in
+   s, and the counts of test agents, review agents, fix rounds and asks to
+   the operator about tests. Spend that no one estimated or no one knows is
+   unknown, never 0 USD: the cell gives the known sum and
+   `unknown for <k> of <n> runs`, or `unknown` with none known.
 4. On the human's word, integrate in the `depends` order of `pod.yaml`: a
    repo merges only after every repo it depends on. The human picks whether
    to merge each `change/<id>` and delete it, open a pull request, or keep
    the branch. Discard work only when the human asks in so many words, and
    after you confirm.
-5. After the merge, in one space commit through the librarian: move
-   `changes/<id>/tests/` into `tests/`, as the folder `tests/<id>/`,
-   advance every affected pin, file
-   `spec.md` in the spec role's lane once the spec author, at your request,
-   has added `integrated: <handle> <UTC>`, and move the folder to
-   `changes/archive/<yyyy-mm-dd>-<id>/`. Make that commit with the
-   librarian's integrate mode (agent-mesh
-   `skills/space-librarian/SKILL.md`, section 3): hand it the two moves as
-   renames, the tests' move first, and `pod.yaml`, `spec.md` and every
-   other file you edited or wrote as records, each named by its path after
-   the moves. Update the project docs in the
+5. After the merge, in one space commit through the librarian, leave the
+   space's `tests/` holding only tests of lasting behavior that is still
+   required:
+   - Promote only the change's tests the plan's test map marks `keep`:
+     they move, with the fixtures they use, from `changes/<id>/tests/` into
+     `tests/<id>/`, and the others stay in the change's folder, which moves
+     to its archive folder below. Each kept test gives its cost class, its
+     expected run time in s and the deliverables it reads; one that does
+     not goes back to the test agent before the move.
+   - Move out of `tests/`, into the archive folder of the change that
+     wrote them, under `superseded-tests/`, the tests and fixtures of each
+     requirement the spec supersedes, and each test the change made stale
+     that no test task updated (one that fails only because the change
+     removed what it relies on), so no test left in `tests/` is known to
+     fail.
+   - Advance every affected pin, file `spec.md` in the spec role's lane
+     once the spec author, at your request, has added
+     `integrated: <handle> <UTC>`, and move the folder to
+     `changes/archive/<yyyy-mm-dd>-<id>/`.
+
+   Make that commit with the librarian's integrate mode (agent-mesh
+   `skills/space-librarian/SKILL.md`, section 3): hand it the moves as
+   renames, the tests' moves first and the folder's last, and `pod.yaml`,
+   `spec.md` and every other file you edited or wrote as records, each
+   named by its path after the moves. Update the project docs in the
    space; docs that ship with the code were updated by a build task before
    the merge. Give each open plan that depended on this change a ledger line
    naming what moved.
@@ -489,11 +569,16 @@ T<n> review: <spec ok|spec issues>; <k> <Severity> [<repo>/<path>:<line>]
 T<n> fix round <r>/5: <a> addressed, <o> open, <sha7>..<sha7>
 T<n> at base: <test name> <fail|pass> (<reason>)[, ...]
 T<n> returned to test: <test name> passed at base
-T<n>.TS<k> -> <test|spec|builder>
+T<n> harness error: <test name>, attempt <k>/3, stopped at <where>
+T<n> cost: actual <s> s, <USD|unknown> USD; estimate <s> s, <USD> USD
+T<n>.TS<k> -> test: covers <risk>
+T<n>.TS<k> -> <spec|builder>
 T<n>.TS<k> returned to builder: carries a computed value
 T<n>.TS<k> outcome: <tested <test name>|proposed as scenario|unit-tested|declined: <reason>|dropped>
+T<n>.TS<k> outcome: declined: covered by <test name>
 approval reopened for <Rn>[, <Rm>]; held T<a>[, T<b>]
-heavy: asked <handle> before T<n>: <command name>; caps <caps>; expected <s> s
+ask: <handle> before T<n>: <run>; <unlisted|past twice the estimate>; spent <s> s, <USD> USD of <s> s, <USD> USD estimated
+T<n> not dispatched: <run>; past twice the estimate, no operator present
 Ruling: <what>; <why>; <cost if wrong>
 filed <space path>[, ...]
 refused <space path>: <profile|reference|id|lane> line <n>

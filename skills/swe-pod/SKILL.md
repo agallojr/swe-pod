@@ -183,9 +183,8 @@ with a `shard:` key is a **shard record**; once a change has one, its
 verify is sharded and 1.7 applies.
 
 The **latest evidence** is the evidence record with the newest id,
-`ev-<YYYYMMDDTHHMMZ>`. It is **green** when it holds a pass for every
-result verify must give (`PROCESS.md §7`), and nothing in it is `fail` or
-`not-run`:
+`ev-<YYYYMMDDTHHMMZ>`. Verify must give a result for each of these
+(`PROCESS.md §7`):
 
 - every scenario of the spec, by its id;
 - every test file `test_*.md` in `changes/<id>/tests/`, under the key
@@ -220,11 +219,75 @@ result verify must give (`PROCESS.md §7`), and nothing in it is `fail` or
 - every quality check the spec declares, under `quality:`. A spec that
   declares none needs `quality: none-declared`.
 
+**Results.** A result is one of `pass`, `fail`, `not-run (cap <n> s)`,
+`harness-error`, `not-selected` or `superseded by <key>`, where `<key>` is a
+result key of this change in the same record (`R1.S1`, `I1`): `R<n>.S<m>`
+under `scenarios:`, `I<n>` under `x-checks:` and `T<n>.TS<k>` under
+`x-suggestions:`.
+
+**Selection** (`PROCESS.md §7`). The record's `selection:` is `targeted` or
+`full`; a record with no `selection:` key is read as `full`. Under
+`selection: targeted`, a regression test is picked when either holds:
+
+- it is script class and one of its deliverable paths (less any
+  ` as <name>`) is a `touched` path of the same repo, or a folder that holds
+  one;
+- it is agent or live class and the plan's test map has a row whose Test
+  cell is its test name.
+
+Under `selection: full`, every regression test is picked. Tests in another
+project's space are never picked. To apply the rule:
+
+- **Cost class.** A test's cost class is its front-matter `class:` value
+  when it has one. Else it comes from `mode:`: `inspect` or `script` is
+  script class; a mode that begins `agent` or `desk` is agent class; a mode
+  that begins `live` is live class. A test with neither is live class, and
+  the evidence names it under `## Undeclared cost class`.
+- **Deliverable paths.** The `<repo>:<path>` entries of the test's
+  front-matter `deliverables:` list, each less any ` as <name>`. A path is
+  a folder that holds a touched path of the same repo when that touched
+  path begins with it and a `/`.
+- **Touched paths.** For each repo in the spec's `repos:` whose remote can
+  be read (1.1), the files its diff from the go line's base to the branch
+  head (1.1) changes, read in a local clone:
+
+  ```
+  git -C <clone> fetch origin change/<id>
+  git -C <clone> diff --name-only <base> <head>
+  ```
+
+  with `<base>` that repo's sha on the go line and `<head>` its branch
+  head. A record whose `touched:` leaves out a file of that diff is not
+  green. For a repo whose remote cannot be read (a fixture's placeholder
+  remote), the record's `touched:` entries for that repo.
+- **Named for a risk.** The plan's test map is its section 9 table; a test
+  is named there when a row's Test cell, the second, is its test name.
+
+**Green.** The latest evidence is **green** when every result verify must
+give is a pass, with two results that are no bar:
+
+- `not-selected`, when the record's `selection:` is `targeted` and the test
+  is not picked;
+- `superseded by <key>`, when `<key>` holds `pass` in the same record and
+  the spec's `supersedes` lists the superseded test's requirement:
+  `<change>/R<n>` for a test keyed `<change>/R<n>.S<m>`, and for a test
+  keyed `<change>/I<n>` or `<change>/T<n>.TS<k>`, any requirement
+  `<change>/R<n>`.
+
+Every other result is a bar: `fail`, `not-run`, `harness-error`, a missing
+result, a `not-selected` test that the selection picks, and a
+`superseded by` result that lacks either condition. The two results that
+can be no bar are regression-test results: on a scenario of the spec, a
+unit suite, a quality check or a test in `changes/<id>/tests/`, either one
+is a bar. A record is green only when no result in it is a bar.
+
 A missing result is not a pass: a record with a result for Q1 only, for a
 spec that declares Q1 and Q2, is not green, and the change is not verified
 (R12.S1). Nor is a record with no `x-checks:` while `changes/<id>/tests/`
 holds `test_I1_<slug>.md`, or one with a result for one regression test of
-ten.
+ten. Nor is a record that gives `not-selected` to a script-class regression
+test reading a file the diff touches, or to an agent-class test the plan's
+test map names, or that gives a picked test `not-run (cap 600 s)`.
 
 ### 1.7 Sharded verify
 
@@ -260,9 +323,13 @@ lead applies (swe-pod `agents/swe-lead.md`, "Sharded verify").
   hold:
   - every shard has a latest record, and every one of them is at the
     current commit set;
-  - nothing in any of them is `fail` or `not-run`;
-  - together they hold a pass for every result 1.6 lists. A result is held
-    when at least one of the records gives it.
+  - none of them gives a result that is a bar by 1.6, a missing result
+    aside, since each shard gives only what it ran. Each `not-selected` is
+    judged by its own record's `selection:`, and each `superseded by <key>`
+    result's `<key>` is looked for in all of them;
+  - together they hold, for every result 1.6 lists, a pass or a result
+    that 1.6 counts as no bar. A result is held when at least one of the
+    records gives it.
 - An out-of-date shard keeps the change unverified until it runs again at
   the current commit set. The lead (swe-pod `agents/swe-lead.md`, "Sharded
   verify"):
@@ -334,8 +401,9 @@ the commands.
    the current commit set, as 1.7 says.
 3. As the lead, write the brief for each ready task and dispatch it, the
    next task first, with its ledger line, as the lead's definition says.
-   Its fences hold: a heavy check waits for the human's word on its command,
-   caps and expected wall time.
+   Its fences hold: an agent-class or live-class run the plan does not
+   list, or one past twice the plan's estimate, waits for the operator's
+   word (`PROCESS.md §11`).
 4. When no task is ready, say what the change waits on: the human's
    approval or go, the plan, or the tasks in flight.
 5. File the lead's records through the librarian, then regenerate
@@ -351,10 +419,13 @@ files nothing and prints its result.
    `### R<n>` under the spec's Requirements section, needs a build task
    whose `serves:` names it, alone or in a range `R<a> to R<b>`.
 2. **Scenario to test.** Once the change has a plan, each scenario needs a
-   row in the plan's test map that gives a test name. Once the task in the
+   row in the plan's test map that gives a test name. When that name is
+   `T<n> done-when`, the row needs no test file: the check is in that build
+   task's done-when, and verify reruns it. Otherwise, once the task in the
    row's "Writes it" or "Written by" column is done, the test's file,
-   `<test name>.md`, needs to be in `changes/<id>/tests/`, or in
-   `tests/<id>/` after integrate.
+   `<test name>.md`, needs to be in `changes/<id>/tests/`; after integrate,
+   in `tests/<id>/` when the row's Keep cell is `keep`, and in the archive
+   folder's `tests/` when it is not.
 3. **Task to commit.** Each build task that has reported needs at least one
    commit on its repo's `change/<id>` with both trailers, `Change: <id>` and
    `Task: T<n>`. Read them, read-only, in a local clone of the repo:

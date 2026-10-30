@@ -1,6 +1,6 @@
 pod: 1
 project: <project>                 # the <name> of proj:<name> in space.yaml
-process: swe-pod-process@1         # pinned PROCESS.md version
+process: swe-pod-process@2         # pinned PROCESS.md version
 repos:                             # one line per code repo of the project
   <repo-a>: {remote: "<url>", pin: "<sha>"}
   <repo-b>: {remote: "<url>", pin: "<sha>"}

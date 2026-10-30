@@ -357,6 +357,13 @@ For each build task the lead writes a brief, dispatches a fresh builder
   builder, rounds 4 and 5 to a fresh builder on a stronger model, each ending
   with a review of the fix diff only. Past round 5 the lead rules on each open
   finding (§9). Minor findings go to the ledger for the whole-change review.
+
+  > Note (change `right-size-testing`, `swe-pod-process@2`): rounds 4 and 5
+  > go to a fresh builder on the same model, the most capable available; only
+  > Critical and Important findings start a fix round, and Minor ones are
+  > fixed in the whole-change fix wave or parked by a ruling
+  > (right-size-testing/R11, R15).
+
 - Builders commit to the change's one branch, `change/<id>`, with trailers
   `Change: <id>` and `Task: <n>`, rebase on it before pushing, and push only
   to it. They never create a branch. A rebase conflict means the plan's
@@ -364,6 +371,10 @@ For each build task the lead writes a brief, dispatches a fresh builder
 - Pick the model for the work: a cheaper one for a mechanical task with a
   complete brief, the most capable one for design judgment and the
   whole-change review.
+
+  > Note (change `right-size-testing`, `swe-pod-process@2`): replaced. Every
+  > role runs on the most capable model available, and the lead never picks a
+  > lesser model to save cost (right-size-testing/R15).
 
 ### 5.4 Project-level tests
 
@@ -525,6 +536,11 @@ Where a mistake would be costly, use a different model or node too, so blind
 spots are not shared. One node may hold several roles if each task runs as its
 own agent.
 
+> Note (change `right-size-testing`, `swe-pod-process@2`): independence between
+> agents comes from a fresh session or another node, never from a lesser
+> model, and every role, review included, runs on the most capable model
+> available (right-size-testing/R15).
+
 **Placement.**
 
 | Role | Usually |
@@ -534,6 +550,10 @@ own agent.
 | build | local or remote; several at once when the plan allows |
 | test | remote, on a node of the environment class the checks need; tests are heavy |
 | review | anywhere, on the most capable model available for the whole-change review |
+
+> Note (change `right-size-testing`, `swe-pod-process@2`): every role runs
+> on the most capable model available, not only the whole-change review
+> (right-size-testing/R15).
 
 **Single seat.** Without a mesh, one interactive session is spec author,
 planner, lead and the space's librarian, and dispatches fresh local subagents
@@ -769,6 +789,12 @@ that ship with the code.
 Every process record and every project-level test SHALL be committed to the
 Project Space.
 
+> Note (change `right-size-testing`, `swe-pod-process@2`): superseded in part by
+> right-size-testing/R12: at integrate only the tests the plan marks to keep
+> move into `tests/`, so R5.S2's "those tests are in `tests/`" holds for the
+> kept tests only; and verify runs only the regression tests its selection
+> picks (right-size-testing/R4).
+
 #### R5.S1 Tests during a change
 - GIVEN a change whose test task has finished
 - WHEN the space is read
@@ -865,6 +891,12 @@ Verify SHALL run every quality check the spec declares, as well as the
 project-level tests, the regression suite and each affected repo's unit tests,
 and no change SHALL be verified while any of them lacks a passing result.
 
+> Note (change `right-size-testing`, `swe-pod-process@2`): superseded in part by
+> right-size-testing/R4 and R5: verify runs only the regression tests its
+> selection picks, and a regression test given `not-selected` under the
+> selection rule, or `superseded by` a passing test of the change, is no bar to
+> green. Every declared quality check still needs a pass (R12.S1 holds).
+
 #### R12.S1 Missing check
 - GIVEN a spec that declares quality checks Q1 and Q2
 - WHEN an evidence record has a result for Q1 only
@@ -878,6 +910,12 @@ and no change SHALL be verified while any of them lacks a passing result.
 ### R13 Heavy checks obey the mesh fences
 A check expected to take over 60 s SHALL run only under the mesh's solver-run
 fence and budget policy.
+
+> Note (change `right-size-testing`, `swe-pod-process@2`): R13.S1 is superseded
+> by right-size-testing/R2 and R3: the lead no longer asks before each heavy
+> check, only before an agent-class or live-class run the plan does not list,
+> or one past twice the plan's estimate. The fence itself still binds every
+> run.
 
 #### R13.S1 Heavy check in a live session
 - GIVEN a verify task that includes a heavy check, in a session with the human
@@ -975,6 +1013,11 @@ hand.
 ### R21 Builder test suggestions
 A build agent MAY suggest tests in its report. Each suggestion SHALL reach the
 test agent in spec terms only, and SHALL get a recorded outcome.
+
+> Note (change `right-size-testing`, `swe-pod-process@2`): superseded in part by
+> right-size-testing/R7: a suggestion reaches the test agent only when it covers
+> a risk no planned test covers, naming that risk; one a planned test covers is
+> declined, naming that test. Every suggestion still gets a recorded outcome.
 
 #### R21.S1 Suggestion carrying a computed value
 - GIVEN a suggestion whose "for the tester" part gives an expected value the

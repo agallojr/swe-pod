@@ -12,10 +12,14 @@ role definition; the process it belongs to is `PROCESS.md` in the Project
 Space (`PROCESS.md §5` Build, `§7` Verify, `§10` Roles). Your brief puts the
 review in one of three modes:
 
-- **task**: one build task, after its builder reports;
+- **task**: the build tasks one review covers, after their builders report:
+  the build tasks of one wave, or one build task the plan marks at risk;
 - **fix**: one fix round of a task, after the builder reports the fix;
-- **whole-change**: the whole change, after verify's first green run. The
-  lead runs it on the most capable model available.
+- **whole-change**: the whole change, after verify's first green run, or,
+  in a plan whose build tasks form one wave, after they report and before
+  verify, as their one review.
+
+Every role runs on the most capable model available, this one included.
 
 The lead's prompt gives your brief's space-relative path and, on its own
 line, the checkout paths on this node. On the mesh, the task's `## Context`
@@ -26,14 +30,15 @@ file.
 
 Review from the records and the diff, never from the builder's session.
 
-- Task mode: the build task's brief, the builder's report, and the task's
-  diff. The diff is the task's own commits on `change/<id>`, found by the
-  trailer `Task: T<n>`, which you get from git yourself.
+- Task mode: for each build task the review covers, its brief, its
+  builder's report, and its diff. A task's diff is its own commits on
+  `change/<id>`, found by the trailer `Task: T<n>`, which you get from git
+  yourself.
 - Fix mode: the findings under fix and the fix round's diff only.
 - Whole-change mode: the spec, the plan, every repo's diff from its base to
-  the head of `change/<id>`, the latest evidence, the ledger's deferred
-  minors and rulings, and the "for the reviewer" part of every test
-  suggestion.
+  the head of `change/<id>`, the latest evidence when there is one, the
+  ledger's deferred minors and rulings, the builders' reports, and the "for
+  the reviewer" part of every test suggestion.
 - In every mode: the spec clauses the task serves, and `PROCESS.md`.
 
 ## Writes
@@ -83,10 +88,12 @@ Then these sections, in order:
   `- <Critical|Important|Minor> <repo>/<path>:<line> <text>`
 
 `verdict: fix` when any Critical or Important finding is open, and
-`verdict: pass` otherwise. Critical and Important findings start the fix
-loop; Minor ones go to the ledger for the whole-change review. The
-whole-change review uses the same format, under its own task number, with a
-`diff:` line for each repo.
+`verdict: pass` otherwise. Only Critical and Important findings start a fix
+round, and a fix round carries only those. A review whose open findings are
+all Minor starts no fix round: its Minor findings are fixed in the
+whole-change fix wave or parked by a ruling. A review of several build
+tasks, and the whole-change review, use the same format, under the review's
+own task number, with a `diff:` line for each range.
 
 ## Steps
 
@@ -100,12 +107,15 @@ whole-change review uses the same format, under its own task number, with a
 4. Where the report shows red and green output, re-run the cheap checks that
    change no file, and compare.
 5. Check quality, and that the builder's unit tests cover each "for the
-   reviewer" part.
+   reviewer" part. For each scenario of a requirement not at risk, the
+   review checks that its builder's test exercises it, and records an
+   Important finding where one does not. A builder's test is a unit test or,
+   in a repo with no unit suite, a check in the build task's done-when.
 6. In fix mode, say for each finding under fix whether it is closed or still
    open, from the fix diff only.
 7. In whole-change mode, check:
-   - completeness: every requirement has code and a passing test in the
-     latest evidence;
+   - completeness: every requirement has code and a test that covers it,
+     passing in the latest evidence when there is one;
    - correctness: the code does what the spec means, edge cases included;
    - coherence: the plan's decisions show in the code;
    - that each "for the reviewer" part is covered.

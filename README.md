@@ -7,9 +7,10 @@ agents, local or remote, with or without an Agent Mesh.
 - Depends on: `agallojr/agent-mesh`, for its librarian
 - Development: project `proj:swe-pod`, Project Space `agallojr/swe-pod-space`
 
-Status: version 1 (`swe-pod-process@1`): the process, the six role
+Status: version 2 (`swe-pod-process@2`): the process, the six role
 definitions, the Project Space and record templates, and the `swe-pod` skill.
-First use is the pilot (`SPEC.md` §16).
+Version 2 sizes testing to risk (change `right-size-testing`). First use was
+the pilot (`SPEC.md` §16).
 
 To install it and start a Project Space, see `INSTALL.md`.
 
@@ -22,30 +23,49 @@ the authority; this is a summary. A change runs five stages:
    and writes the change's spec: requirements, each with at least one
    scenario. You approve it. Nothing is planned, built or tested before that.
 2. **Plan.** A fresh planner maps every requirement to a build task and every
-   scenario to a project-level test, and gives each task its dependencies.
-   Tasks with no dependency between them run in parallel. At project size you
-   skim the plan.
+   scenario to a test, and gives each task its dependencies. Every test the
+   plan lists names the risk it covers, and the plan lists no test without
+   one. Risk, not size, decides independent tests: a requirement the plan
+   marks at risk gets blind project-level tests, written by a test agent
+   that never saw the build, at any size; a requirement not at risk gets
+   none beyond its builder's tests, which the review checks against its
+   scenarios. The plan estimates the wall time in s and spend in USD of its
+   agent-class and live-class runs, and lists a live test only to reproduce
+   and confirm a reported defect or where nothing cheaper can show the
+   behavior. Tasks with no dependency between them run in parallel. At
+   project size you skim the plan.
 3. **Build.** At your go, the lead creates one branch, `change/<id>`, in each
    code repo the spec names. Builders commit code, unit tests and shipped docs
-   to it, test first, and each build task is reviewed. In parallel, a test
-   agent writes the project-level tests blind, from the spec alone.
-4. **Verify.** A test agent runs the change's project-level tests, the
-   space's regression suite, every unit suite and every declared quality check
-   at one commit set, and writes the evidence. A fresh reviewer then reviews
-   the whole change. Verify may be split into shards run by several test
+   to it, test first. There is one review per wave of build tasks, and a
+   build task of its own only when the plan marks it at risk; a change whose
+   build tasks form one wave gets one review, the whole-change review. Minor
+   findings never start a fix round. In parallel, a test agent writes the
+   blind tests of the requirements at risk, from the spec alone.
+4. **Verify.** A test agent runs the change's own tests, every unit suite,
+   every declared quality check and the regression tests the change could
+   break, at one commit set, and writes the evidence: a script-class
+   regression test runs when it reads a file the change touches, and an
+   agent-class or live-class one only when the plan names it for a risk. A
+   full regression runs only on your word. A regression test verify rightly
+   did not run, or one superseded by a passing test of the change, does not
+   hold up green. Verify may be split into shards run by several test
    agents, local and remote together. A sharded verify counts only when the
-   shards' evidence, all at the same commit set, together holds a pass for
-   every scenario, unit suite and declared quality check.
+   shards' evidence, all at the same commit set, together holds a pass, or
+   a result that is no bar, for every scenario, unit suite and declared
+   quality check.
 5. **Integrate.** The lead files a final report that lists every ruling it
-   made for you. On your word, the branches merge in dependency order, then
-   the pins advance and the change's tests join the space's regression suite.
+   made for you and the test cost against the plan's estimate. On your word,
+   the branches merge in dependency order, then the pins advance, and only
+   the tests the plan marks to keep join the space's regression suite.
 
 Records and project-level tests live in a Project Space: a git repo with one
 branch, `main`, holding specs, plans, ledgers, briefs, reports, reviews,
 evidence and decisions. Code repos hold only code, unit tests and the docs
 that ship with the code. The roles are spec, plan, lead, build, test and
 review, and each task runs as its own agent, started fresh from its brief
-(`PROCESS.md` §10). There are no commands: you talk to the pod in plain words
+(`PROCESS.md` §10). Every role runs on the most capable model available. The
+savings come from running fewer, better-targeted tests, never from weaker
+agents. There are no commands: you talk to the pod in plain words
 (`PROCESS.md` §14).
 
 ## Layout
@@ -153,10 +173,12 @@ Project Space in the bus by hand, under `<bus>/spaces/`, and lists it in
   fence and the budget policy bind every pod agent. Heaviness is judged per
   check, from that check's own recorded expected run time alone: over 60 s is
   heavy, 60 s or less is not, whatever its cap, its label or the task's total
-  time. A check that records no expected run time, such as a unit suite or a
-  declared quality check, takes it from its brief or from the record of its
-  last run when either gives one, and is heavy only when that time is over
-  60 s. With no known time, the lead does not ask you about it, and the
-  running agent's own fence still binds the run. With you present, the lead
-  first gives you the command, the caps and the expected wall time in s of
-  each heavy check, and of no other check.
+  time, and a heavy check runs under the fences like any solver run.
+- **Asks about test runs.** The lead asks the operator about a test run only
+  when it is an agent-class or live-class run the plan does not list, or
+  when it would take the expensive runs past twice the plan's estimate in
+  wall time or in spend, counting their actuals so far plus the estimate of
+  the run to dispatch. Every other run the plan lists goes ahead with no
+  ask. Your go on the plan covers it. With no operator present, a run past
+  that point is not dispatched. The budget policy's own ask points still
+  hold.

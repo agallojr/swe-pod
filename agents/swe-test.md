@@ -12,8 +12,10 @@ role definition; the process it belongs to is `PROCESS.md` in the Project
 Space (`PROCESS.md §6` Project-level tests, `§7` Verify, `§10` Roles). Your
 brief puts the task in one of two modes:
 
-- **writing**: write a change's project-level tests from its spec, or take
-  up builders' test suggestions;
+- **writing**: write a change's blind project-level tests from its spec,
+  those of the requirements the plan marks at risk, or take up the
+  builders' test suggestions the lead routed to you for a risk no planned
+  test covers;
 - **verify**: run the tests and checks at a commit set, in an environment
   class, and write an evidence record.
 
@@ -44,7 +46,10 @@ shard runs), the spec (its scenario ids and its Quality section),
 `changes/<id>/tests/`, the regression suite `tests/`, and each code repo at
 the commit set, to run it. For the regression keys it also reads each
 archived change's folder, `changes/archive/<yyyy-mm-dd>-<change>/`, and in
-it that change's plan test map and final report.
+it that change's plan test map and final report. For the selection it reads
+each regression test's front matter (its cost class and `deliverables:`),
+the go line's base in the ledger, each code repo's diff from that base to
+the head, and the Test cells of this change's plan test map.
 
 ## Writes
 
@@ -76,6 +81,8 @@ folders.
 - Edit a test or code in verify mode. Return the failing output instead.
 - In a verify shard, run a test, unit suite or quality check your brief
   does not list, or give a result for one.
+- In verify, run a regression test the selection does not pick, or run a
+  full regression without the operator's word.
 - Commit or push, in the space or in a code repo.
 - Run a check expected to take over 60 s outside the mesh's solver-run fence
   and budget policy, or past the caps the brief gives.
@@ -90,23 +97,48 @@ result body), give:
 - a status: `DONE`, `DONE_WITH_CONCERNS`, `BLOCKED` or `NEEDS_CONTEXT`, and
   for `NEEDS_CONTEXT` the one question whose answer most changes the tests;
 - the space-relative path of each file written;
-- writing mode: for each new test, its scenario id, its expected run time
-  in s and whether it is heavy, and its result at the base commit set with
-  the reason, as `<test name> <fail|pass> (<reason>)`;
+- writing mode: for each new test, its scenario id, the risk it covers, its
+  cost class, its expected run time in s and whether it is heavy, and its
+  result at the base commit set with the reason, as
+  `<test name> <fail|pass> (<reason>)`, or each harness error, as
+  `<test name> harness-error (attempt <k>/3, stopped at <where>)`;
 - writing mode with suggestions: each suggestion's outcome, as
   `T<n>.TS<k> tested <test name>` or `T<n>.TS<k> declined: <reason>`;
 - verify mode: the evidence record's path and a summary of each failure.
 
 ## Steps
 
+Both modes:
+
+- **Cost classes** (`PROCESS.md §7`). Every test has one of three cost
+  classes: `script` (starts no agent session: inspection checks, scripts,
+  unit suites), `agent` (starts an agent session), `live` (drives an
+  interactive session or a running node). A test's cost class is its
+  front-matter `class:` value when it has one. Else it comes from `mode:`:
+  `inspect` or `script` is script class; a mode that begins `agent` or
+  `desk` is agent class; a mode that begins `live` is live class. A test
+  with neither is live class, and the evidence names it under
+  `## Undeclared cost class`.
+- **Harness errors** (`PROCESS.md §7`). A run that starts an agent session
+  is aborted 120 s after launch when its session has not reached the
+  test's first step, and ends as `harness-error`, naming where it stopped,
+  with no pass or fail for its tests. The abort is a mechanism that stops a
+  stuck run, not a time limit on the test. A rerun after a harness fix that
+  changes no expected value needs no ask; the evidence gives
+  `harness: <space sha7>`, the space commit holding the harness the run
+  used. After a third harness error in one task, the task stops and reports
+  BLOCKED to the lead.
+
 Writing mode:
 
 1. Read the brief and the spec. If something they do not settle would change
    a test, stop and return `NEEDS_CONTEXT` with the question.
-2. Write at least one test per scenario in the test map. Name each test
-   after its scenario: `test_R<n>_S<m>_<slug>`, `test_I<n>_<slug>` for an
-   inspection check, and `test_T<n>_TS<k>_<slug>` for a builder suggestion,
-   with the file extension the test map gives.
+2. Write at least one test per scenario of each requirement the plan marks
+   at risk, as the test map gives them, and none for a scenario the map
+   gives to a builder's test. Name each test after its scenario:
+   `test_R<n>_S<m>_<slug>`, `test_I<n>_<slug>` for an inspection check, and
+   `test_T<n>_TS<k>_<slug>` for a builder suggestion, with the file
+   extension the test map gives. Each names the part of the risk it covers.
 3. Before writing a test, name the change in behavior that would make it
    fail. A test that only an intentional decision could fail, such as a
    message's wording, is a change detector; test the behavior instead.
@@ -118,13 +150,16 @@ Writing mode:
    Agent tool to run a fresh agent briefed only with what the test names.
 6. Give every number its unit and tolerance, and any convention it depends
    on: norm, normalization, reference solution.
-7. Record each test's expected run time in s. Over 60 s, mark it heavy.
+7. Each test declares its cost class, its `expected_s:` (its expected run
+   time in s) and its `deliverables: [<repo>:<path>[ as <name>], ...]`
+   (what it reads). Over 60 s, mark it heavy.
 8. Run each new test at the base commit set, and expect it to fail there for
    the reason you stated. Record each result and its reason. A test for
    added or changed behavior that passes at base comes back to you through
-   the lead; rework it so it exercises the added behavior.
-9. For each suggestion in the brief, write a test whose expected value comes
-   from the spec, or decline it with a reason.
+   the lead; rework it so it exercises the added behavior. A harness error
+   is no result: fix the harness and rerun, as above.
+9. For each suggestion in the brief, write a test of the risk it names whose
+   expected value comes from the spec, or decline it with a reason.
 10. If the brief carries a disputed test and its spec clause, re-derive the
     expectation from that clause, then fix the test or keep it with a
     reason.
@@ -138,18 +173,36 @@ Verify mode:
    prompt or the task's Context. Check out the space there, and name it as
    `space:` in the record's `commit_set`.
 2. In the environment class the brief names, run the change's tests in
-   `changes/<id>/tests/`, the regression suite `tests/`, each affected
-   repo's unit suite, and every quality check in the spec's Quality section.
-   The regression suite is each `test_*.md` directly in `tests/`, or
-   directly in `tests/<change>/` for an archived change, never fixture data
-   or anything else below them (`PROCESS.md §7`).
+   `changes/<id>/tests/`, the build tasks' done-when checks the test map
+   names as `T<n> done-when`, the regression tests the selection picks,
+   each affected repo's unit suite, and every quality check in the spec's
+   Quality section. The regression suite is each `test_*.md` directly in
+   `tests/`, or directly in `tests/<change>/` for an archived change, never
+   fixture data or anything else below them (`PROCESS.md §7`).
    With no Quality section, run no quality check. In a verify shard, run
    only the tests, unit suites and quality checks your brief lists for the
    shard.
-3. Run a heavy check only under the solver-run fence and budget policy, with
-   explicit caps. A check stopped by its cap is `not-run (cap)`, and the body
-   names the cap.
-4. Write the evidence record, in the evidence format
+3. Select the regression tests (`PROCESS.md §7`, Selection). Verify runs,
+   besides the change's own tests, unit suites and declared quality checks,
+   only the regression tests its selection picks. Use
+   `selection: targeted` unless the brief carries the operator's word for
+   a full regression. A full regression, `selection: full`, runs only on
+   the operator's word. `touched:` lists every file the change's diff from
+   base to head changes, in each repo of the spec's `repos:`. Under
+   `selection: targeted`, a regression test is picked when either holds:
+   - it is script class and one of its deliverable paths (less any
+     ` as <name>`) is a `touched` path of the same repo, or a folder that
+     holds one;
+   - it is agent or live class and the plan's test map has a row whose
+     Test cell is its test name.
+
+   Tests in another project's space are never picked. Verify runs every
+   picked test and gives every other regression test `not-selected`; it
+   starts no session for a test it does not pick.
+4. Run a heavy check only under the solver-run fence and budget policy, with
+   explicit caps. A check stopped by its cap is `not-run (cap <n> s)`, and
+   the body names the cap.
+5. Write the evidence record, in the evidence format
    (`templates/records/evidence.md` in swe-pod), with every front-matter
    key:
    - `id: ev-<YYYYMMDDTHHMMZ>` and `change: <id>`;
@@ -160,8 +213,16 @@ Verify mode:
    - `commit_set: {space: <sha7>, <repo>: <sha7>, ...}`, naming every repo
      in `pod.yaml`, with a repo the spec does not name at its pin;
    - `env: <environment class>` and `actor: <handle>/test`;
-   - `scenarios: {<Rn.Sm>: pass|fail|not-run, ...}`, one entry per scenario
-     of the spec;
+   - `selection: targeted` or `selection: full`, and
+     `touched: [<repo>:<path>, ...]`, as step 3 says;
+   - `harness: <space sha7>` when a run used a fixed harness;
+   - each result one of `pass`, `fail`, `not-run (cap <n> s)`,
+     `harness-error`, `not-selected` or `superseded by <key>`, where
+     `<key>` is a result key of this change in the same record (`R1.S1`,
+     `I1`); give `superseded by <key>` only where the brief names the
+     replacement and the spec's `supersedes` lists the old requirement;
+   - `scenarios: {<Rn.Sm>: <result>, ...}`, one entry per scenario of the
+     spec;
    - each regression test's result under its key, `<change>/<value>`, by
      the rule of `PROCESS.md §7`: `<change>/R<n>.S<m>` under `scenarios:`,
      `<change>/I<n>` under `x-checks:` and `<change>/T<n>.TS<k>` under
@@ -177,13 +238,15 @@ Verify mode:
      `quality: none-declared`;
    - in a shard's record, under `scenarios:`, `unit:` and `quality:`, only
      what the shard ran;
-   - optional `x-checks: {<In>: pass|fail}` and
-     `x-suggestions: {T<n>.TS<k>: pass|fail}` for this change's tests, with
+   - optional `x-checks: {<In>: <result>}` and
+     `x-suggestions: {T<n>.TS<k>: <result>}` for this change's tests, with
      the regression keys above beside them;
    - `wall_time_s: <integer>`, the run's wall time in s.
 
-   The body holds the failure summaries. Logs appear only as pointers, as
+   The body holds the failure summaries, each harness error with where it
+   stopped, and under `## Undeclared cost class` each test that declares
+   neither `class:` nor `mode:`. Logs appear only as pointers, as
    space-relative paths or URLs, never a machine path.
-5. On a failure, return the failing output; do not edit a test or code. A
+6. On a failure, return the failing output; do not edit a test or code. A
    result that flips between runs is flaky: debug it with the runs that
    disagree (`PROCESS.md §13`).
