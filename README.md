@@ -37,10 +37,10 @@ the authority; this is a summary. A change runs five stages:
 3. **Build.** At your go, the lead creates one branch, `change/<id>`, in each
    code repo the spec names. Builders commit code, unit tests and shipped docs
    to it, test first. There is one review per wave of build tasks, and a
-   build task of its own only when the plan marks it at risk; a change whose
-   build tasks form one wave gets one review, the whole-change review. Minor
-   findings never start a fix round. In parallel, a test agent writes the
-   blind tests of the requirements at risk, from the spec alone.
+   review of a build task of its own only when the plan marks it at risk; a
+   change whose build tasks form one wave gets one review, the whole-change
+   review. Minor findings never start a fix round. In parallel, a test agent
+   writes the blind tests of the requirements at risk, from the spec alone.
 4. **Verify.** A test agent runs the change's own tests, every unit suite,
    every declared quality check and the regression tests the change could
    break, at one commit set, and writes the evidence: a script-class
@@ -48,11 +48,14 @@ the authority; this is a summary. A change runs five stages:
    agent-class or live-class one only when the plan names it for a risk. A
    full regression runs only on your word. A regression test verify rightly
    did not run, or one superseded by a passing test of the change, does not
-   hold up green. Verify may be split into shards run by several test
-   agents, local and remote together. A sharded verify counts only when the
-   shards' evidence, all at the same commit set, together holds a pass, or
-   a result that is no bar, for every scenario, unit suite and declared
-   quality check.
+   hold up green. The two results that can be no bar are regression-test
+   results: on a scenario of the spec, a unit suite, a quality check or a
+   test in `changes/<id>/tests/`, either one is a bar. Verify may be split
+   into shards run by several test agents, local and remote together. A
+   sharded verify counts only when the shards' evidence, all at the same
+   commit set, together gives a pass for every scenario, unit suite,
+   declared quality check and test of the change, and for every regression
+   test a pass or a result that is no bar.
 5. **Integrate.** The lead files a final report that lists every ruling it
    made for you and the test cost against the plan's estimate. On your word,
    the branches merge in dependency order, then the pins advance, and only

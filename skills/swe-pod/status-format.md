@@ -123,10 +123,11 @@ the file ends with one newline.
     them gives, else `missing`.
   - A shard's line is `<shard id>: none` until the shard has a record.
     Then it gives that record's id and `env`, `green` when no result in it
-    is a bar (a missing result aside), and `, stale` when it is out of
-    date. Its
-    results are those above, but each `<n>` counts only the results of
-    that kind the record gives, and a kind it gives none of is left out:
+    is a bar (a missing result aside), with each `superseded by <key>`
+    result's `<key>` looked for in every shard's latest record, as for the
+    first line, and `, stale` when it is out of date. Its results are those
+    above, but each `<n>` counts only the results of that kind the record
+    gives, and a kind it gives none of is left out:
     `unit` for each repo the record lists, in the spec's `repos:` order,
     and `quality none-declared` when the record says so.
 - **open findings:** the totals of section "Open findings", below.
@@ -167,28 +168,33 @@ Decide each task's state by the first of these that holds. The ledger terms
 
 1. **done.**
    - A build task: it has reported, and its review is closed.
-   - A review task: the review of the task it reviews (`SKILL.md` section
-     1.3) is closed. One that reviews no single task, such as the
-     whole-change review, counts its own review lines.
+   - A review task that reviews build tasks (`SKILL.md` section 1.3): the
+     review of each of them is closed. A whole-change review that reviews
+     build tasks needs its own review closed as well.
+   - A review task that reviews no build task, such as the whole-change
+     review after verify: its own review is closed.
    - A test or lead task: it has reported.
 2. **blocked.** Its newest status line, later than its newest dispatch
-   line, is BLOCKED or NEEDS_CONTEXT.
+   line, is BLOCKED or NEEDS_CONTEXT; or a not-dispatched line names it
+   (`SKILL.md` section 1.4) and no dispatch line of it is newer.
 3. **dispatched.** A dispatch line names it. A review task too is
    dispatched only by its own dispatch line.
 4. **ready.** It is not held, and every task in its `after` list is done.
-   A review task that reviews one task is ready instead once that task has
-   reported and every other task in its `after` list is done, since the
-   review is part of that task's done-when.
+   A review task that reviews build tasks (`SKILL.md` section 1.3) is ready
+   instead once each of them has reported and every other task in its
+   `after` list is done, since the review is part of their done-when. So a
+   wave's review is ready once its build tasks report, and so is the
+   whole-change review of a plan whose build tasks form one wave.
 5. **waiting.** Anything else, held tasks included.
 
 ### Latest
 
-A task's events are the dispatch, status, fix-round, at-base and
-returned-to-test lines that name it. A review task's events are its own
-dispatch lines and the review lines of the task it reviews (its own review
-lines, when it reviews no single task). The newest is the one with the
-latest UTC, and of those the one written last. The cell is its UTC, a
-space, and the event in this form:
+A task's events are the dispatch, status, fix-round, at-base,
+returned-to-test, harness-error and not-dispatched lines that name it. A
+review task's events are its own dispatch and review lines and the review
+lines of each build task it reviews (`SKILL.md` section 1.3). The newest is
+the one with the latest UTC, and of those the one written last. The cell is
+its UTC, a space, and the event in this form:
 
 | Event | Cell text after the UTC |
 |---|---|
@@ -198,6 +204,8 @@ space, and the event in this form:
 | review | `review: ` or `review r<k>: `, then `spec ok` or `spec issues`, then `; ` and its counts as `<k> <Severity>` in the order Critical, Important, Minor, joined by `, `, without file and line. Leave out each count of 0. When no count is left, or the line gives none, write `none`: `spec ok; 0 Important` gives `review: spec ok; none` |
 | fix round | `fix round <r>/5: <a> addressed, <o> open` |
 | at base | `at base: <f> fail, <p> pass`, counting the tests the line names |
+| harness error | `harness error, attempt <k>/3` |
+| not dispatched | `not dispatched, past twice the estimate` |
 | returned to test | `returned to test: <test name>` |
 
 A `|` inside a cell is written `\|`.

@@ -109,16 +109,20 @@ there. In an `after:` list, `T<a> to T<b>` means every plan task numbered
 from a to b, letter suffixes included; text after the closing bracket is a
 comment.
 
-A **review task** is a task whose role is review. The whole-change review,
-the one whose heading title is `Whole-change review`, reviews no single
-task. Any other review task reviews the task given by the first of these
-it has:
+A **review task** is a task whose role is review. A **build task** is one
+whose role is build. A review task reviews the build tasks given by the
+first of these it has:
 
 1. its Reviews cell, in a review table: the task id the cell begins with;
 2. its heading, `### T<n> Review of T<m>`: T<m>;
-3. its `after:` list, when that list names one task: that task.
+3. its `after:` list: every build task it names, one or more.
 
-With none of them, it reviews no single task.
+So a wave's review, `### T<n> Review of wave <w>`, reviews every build task
+its `after:` list names, and so does the whole-change review, the one whose
+heading title is `Whole-change review`, in a plan whose build tasks form one
+wave: its `after:` list names them (`PROCESS.md §4`). A review task with
+none of these, such as a whole-change review whose `after:` list names only
+the verify task, reviews no build task.
 
 ### 1.4 Reading the ledger
 
@@ -149,6 +153,9 @@ says so, and otherwise only for the "As of" time.
   findings then open on `T<n>`, at any fix round, a whole-change review's
   included (`status-format.md`, "Open findings").
 - **Go line:** an event that begins `go`.
+- **Harness-error line:** an event that begins `T<n> harness error:`.
+- **Not-dispatched line:** an event that begins `T<n> not dispatched:`. The
+  task waits for the operator's word until a newer dispatch line names it.
 - **Held:** an event `approval reopened for <Rn>; held T<a>[, T<b>]` holds
   those tasks until a later `spec approved by <handle>` event.
 
@@ -246,7 +253,9 @@ project's space are never picked. To apply the rule:
 - **Deliverable paths.** The `<repo>:<path>` entries of the test's
   front-matter `deliverables:` list, each less any ` as <name>`. A path is
   a folder that holds a touched path of the same repo when that touched
-  path begins with it and a `/`.
+  path begins with it and a `/`, or with it alone when it ends in `/`. A
+  path that is empty or `.` names the whole repo, which holds every
+  touched path of that repo.
 - **Touched paths.** For each repo in the spec's `repos:` whose remote can
   be read (1.1), the files its diff from the go line's base to the branch
   head (1.1) changes, read in a local clone:
@@ -327,9 +336,10 @@ lead applies (swe-pod `agents/swe-lead.md`, "Sharded verify").
     aside, since each shard gives only what it ran. Each `not-selected` is
     judged by its own record's `selection:`, and each `superseded by <key>`
     result's `<key>` is looked for in all of them;
-  - together they hold, for every result 1.6 lists, a pass or a result
-    that 1.6 counts as no bar. A result is held when at least one of the
-    records gives it.
+  - together they give a pass for every scenario, unit suite, declared
+    quality check and test of the change, and for every regression test a
+    pass or a result that is no bar. A result is given when at least one
+    of the records gives it.
 - An out-of-date shard keeps the change unverified until it runs again at
   the current commit set. The lead (swe-pod `agents/swe-lead.md`, "Sharded
   verify"):
@@ -394,11 +404,11 @@ the commands.
 2. Read the change's state and its tasks (section 1). The ready tasks are
    those in state ready (`status-format.md`, "Task states"): not held,
    with no dispatch line yet, and whose `after` tasks are all done, or, for
-   the review of one task, whose task has reported and every other task in
-   its `after` list is done. The first of them, in task
-   order, is the next task. With none ready, a verify shard that is done
-   and whose latest record is out of date (1.7) is next: it runs again at
-   the current commit set, as 1.7 says.
+   a review task that reviews build tasks (1.3), whose build tasks have all
+   reported and every other task in its `after` list is done. The first of
+   them, in task order, is the next task. With none ready, a verify shard
+   that is done and whose latest record is out of date (1.7) is next: it
+   runs again at the current commit set, as 1.7 says.
 3. As the lead, write the brief for each ready task and dispatch it, the
    next task first, with its ledger line, as the lead's definition says.
    Its fences hold: an agent-class or live-class run the plan does not

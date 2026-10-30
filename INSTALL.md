@@ -131,10 +131,12 @@ overlay, the layer of deployment-specific rules on top of the base rules.
 - **G2. A pod change counts as asking.** Where the base rules say "no
   separate spec files unless asked" or "write test modules only when asked",
   a pod change counts as asking.
-- **G3. A verify after the go counts as operator-posted.** For the budget
-  policy on long runs, such as a solver-run budget policy, a verify task the
-  lead posts after the human's go counts as operator-posted. The policy's
-  caps, and the points where it stops to ask, still hold.
+- **G3. A listed test run after the go counts as operator-posted.** For
+  the budget policy on long runs, such as a solver-run budget policy, a
+  test or verify task the lead posts after the human's go counts as
+  operator-posted for every run the plan lists, the runs a test-writing
+  task makes at base included. The policy's caps, and the points where it
+  stops to ask, still hold.
 
 These rules loosen nothing else. The git gate, the solver-run fence and the
 budget policy still bind every pod agent, and a check expected to take over

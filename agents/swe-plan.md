@@ -90,13 +90,18 @@ spec are the builder check. Your stage is `PROCESS.md §4`.
       every build and test task, with `needs` naming the environment class
       the tests require), whole or in shards (step 6), each shard with its
       own `needs`. For a spec with `supersedes`, add a test task that
-      updates the matching tests in `tests/`.
+      writes their replacements in `changes/<id>/tests/`; verify gives the
+      old tests `superseded by <key>`, and integrate moves them out of
+      `tests/`.
    7. Review tasks: the plan has one review per wave of build tasks, a
       review of one build task only where its entry has `- risk: at risk`,
       and the whole-change review. A wave is a group of build tasks the
       dependency summary runs together, and its review covers those of
       them not reviewed alone. A plan whose build tasks form one wave has
-      one review, the whole-change review.
+      one review, the whole-change review. It covers every build task,
+      those marked at risk included; its `after:` list names them, and it
+      comes before verify. A wave whose build tasks are all marked at risk has no wave
+      review: their own reviews cover it.
    8. Integrate task: role lead, after verify and the whole-change review,
       listing the docs and open plans the change touches.
    9. Test map: one row per scenario, in the template's columns: Scenario,
@@ -112,7 +117,10 @@ spec are the builder check. Your stage is `PROCESS.md §4`.
    for"). Every test the plan lists names the risk it covers, and the plan
    lists no test without one.
    - The plan marks each requirement `at risk` or `small`, with its reason,
-     in the risk table that opens section 6.
+     in the risk table that opens section 6. A requirement is at risk when
+     a fault in it would be costly or would show only late, such as a fix
+     for a reported defect seen only in a live session, or a rule that
+     decides whether a change is verified; otherwise it is small.
    - Risk, not size, decides independent tests: a requirement the plan
      marks at risk gets blind project-level tests, written by a test agent
      that never saw the build, at any size; a requirement not at risk gets
@@ -180,7 +188,7 @@ spec are the builder check. Your stage is `PROCESS.md §4`.
    tasks that share a file is ordered by `after`; no `after` entry orders two
    tasks that neither need each other's output nor share a file; every
    sharded task names its shards and says how the work divides; a spec with
-   `supersedes` has its test-update task; every planned test names the risk
+   `supersedes` has its replacement-test task; every planned test names the risk
    it covers; every agent- and live-class run has its wall time, spend and
    caps, with the totals; a live or heavy test is listed only to reproduce a
    reported defect and confirm its fix, or with the reason no cheaper check

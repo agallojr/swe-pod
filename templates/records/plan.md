@@ -119,9 +119,11 @@ The plan has one review per wave of build tasks, a review of one build task
 only where its entry has `- risk: at risk`, and the whole-change review. A
 wave is a group of build tasks the dependency summary runs together, and its
 review covers those of them not reviewed alone. A plan whose build tasks form
-one wave has one review, the whole-change review. Then leave out the other
-two entries, and the whole-change review comes after the build tasks and
-before verify.
+one wave has one review, the whole-change review. It covers every build task,
+those marked at risk included: leave out the other two entries, and the
+whole-change review comes after the build tasks and before verify. A wave
+whose build tasks are all marked at risk has no wave review: their own
+reviews cover it.
 -->
 ### T<n> Review of wave <w>
 - role: review
@@ -144,7 +146,8 @@ before verify.
 - runs: <local|mesh>
 - needs: any
 - done when: a review record over the spec, the plan, every repo's diff, the
-  latest evidence, and the ledger's deferred minors and rulings
+  latest evidence when there is one, and the ledger's deferred minors and
+  rulings
 
 ## 8. Integrate task
 ### T<n> Integrate
@@ -164,14 +167,15 @@ before verify.
 <!--
 One row per scenario, and one per regression test the plan names for a risk,
 keyed <change>/<value>. Class is script, agent or live. Keep is `keep` or
-`not kept: <reason>`. A scenario checked in a build task's done-when has Test
+`not kept: <reason>`; a regression test's row is keep, as it stays in
+tests/. A scenario checked in a build task's done-when has Test
 T<n> done-when, Written by T<n>, and needs no test file.
 -->
 | Scenario | Test | Class | Risk it covers | Expected (s) | Keep | Written by | Unit tests that also cover it |
 |---|---|---|---|---|---|---|---|
 | R<n>.S<m> | test_R<n>_S<m>_<slug> | <script|agent|live> | <at risk: the part of the risk it covers> | <s> | keep | T<n> | <repo>/<path> |
 | R<n>.S<m> | T<n> done-when | script | <small: the risk it covers> | <s> | not kept: a builder's check | T<n> | none |
-| <change>/<value> | <test name> | <agent|live> | <the risk of this change it covers> | <s> | already in tests/ | <change> | none |
+| <change>/<value> | <test name> | <agent|live> | <the risk of this change it covers> | <s> | keep | <change> | none |
 
 ## 10. Dependency summary
 - parallel: <the task groups that run at the same time>

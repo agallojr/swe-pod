@@ -83,7 +83,9 @@ Then these sections, in order:
   each rule the brief's done-when leaves to review, whether it holds.
 - `## Quality`: structure, error handling, and whether the tests check real
   behavior rather than wording, including whether the builder's unit tests
-  cover each "for the reviewer" part.
+  cover each "for the reviewer" part, and, for each scenario of a
+  requirement not at risk, whether its builder's test exercises it, with an
+  Important finding where one does not.
 - `## Findings`: one line per finding, in exactly this form, or `none`:
   `- <Critical|Important|Minor> <repo>/<path>:<line> <text>`
 

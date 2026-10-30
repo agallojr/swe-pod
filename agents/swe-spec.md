@@ -102,8 +102,9 @@ human approves one. The process is `PROCESS.md` in the space; your stage is
   on: norm, normalization, reference solution.
 - Ids are local to the spec (`R1`, `R1.S1`) and qualified outside it
   (`<id>/R1.S1`). When the work changes behavior an integrated spec requires,
-  list those qualified ids under `supersedes`; the plan then updates their
-  tests.
+  list those qualified ids under `supersedes`; the plan then has a test task
+  write their tests' replacements in `changes/<id>/tests/`, and integrate
+  moves the old tests out of `tests/`.
 - A fix that restores behavior an integrated spec already requires may cite
   that requirement in place of new ones: a five-line spec.
 - Quality checks go in `## Quality`, one per tool or review: what is run, on

@@ -151,7 +151,8 @@ drive this yourself. For each ready task:
 2. For a task that writes project-level tests, use the test-writing brief
    instead. Its sections are `## Task` (the test task's own plan entry,
    verbatim), `## Spec` (the path only), then `## Interface contract`,
-   `## Global constraints` (all of them, operator decisions included) and
+   `## Global constraints` (all of them, operator decisions included, and
+   the plan's rows for the expensive runs the task makes) and
    `## Test map`, copied from the plan, then `## Start from` (the base
    commit set and the commit set under test), `## Suggestions` (the
    suggestions task only: the "for the tester" parts, each naming the risk
@@ -345,8 +346,10 @@ unchanged.
 **Reviews and the fix loop.** The plan has one review per wave of build
 tasks, a review of one build task only where its entry has
 `- risk: at risk`, and the whole-change review. A plan whose build tasks
-form one wave has one review, the whole-change review. It is then also the
-review of each build task. Record the review that covers a build task
+form one wave has one review, the whole-change review. It covers every
+build task, those marked at risk included, and is then their review. A wave
+whose build tasks are all marked at risk has no wave review: their own
+reviews cover it. Record the review that covers a build task
 under that task's number, one line per build task it covers,
 `T<n> review: <spec ok|spec issues>; <k> <Severity> ...`; the whole-change
 review also gets its line under its own number. Only Critical and Important
@@ -382,7 +385,9 @@ The whole-change fix wave runs only when the whole-change review has a
 Critical or Important finding, and then also takes the batched Minor
 findings; with none, they are parked by one ruling and listed in the final
 report. The fix wave goes to one builder, then one re-review; you rule on
-what remains.
+what remains. In a plan whose build tasks form one wave, a fix that lands
+after the whole-change review, such as one routed from a verify failure,
+gets a review of its fix diff only.
 
 **Rulings.** When the spec supports an answer, decide and keep going, and
 record one line, `Ruling: <what>; <why>; <cost if wrong>`. Every ruling
@@ -412,10 +417,13 @@ skill reads it the same way.
 - The records are green together only when every one of them is at the
   current commit set, none of them gives a result that is a bar by the
   green rule (`PROCESS.md §7`, with each `superseded by <key>` result's
-  `<key>` looked for in all of them), and together they give, for every
-  scenario, regression test, unit suite and declared quality check, a pass
-  or a result that is no bar. A shard with no record yet leaves them not
-  green.
+  `<key>` looked for in all of them), and together they give a pass for
+  every scenario, unit suite, declared quality check and test of the
+  change, and for every regression test a pass or a result that is no bar.
+  The two results that can be no bar are regression-test results: on a
+  scenario of the spec, a unit suite, a quality check or a test in
+  `changes/<id>/tests/`, either one is a bar. A shard with no record yet
+  leaves them not green.
 - The change is verified only when they are green together and the
   whole-change review has no open Critical or Important finding.
 - While a shard is out of date, the change is not verified, and the shard
@@ -453,7 +461,9 @@ with its wall time in s, its spend in USD and its caps, and their totals
   A run held for want of an operator is recorded as
   `T<n> not dispatched: <run>; past twice the estimate, no operator present`.
 - The brief of a test task quotes the plan's rows for the expensive runs it
-  makes, with their caps and estimates.
+  makes, with their caps and estimates: under `## Global constraints` in a
+  test-writing brief, and in `## Task` in a verify brief. The rows hold
+  nothing of the build.
 - After each test task, the lead records the actual wall time in s and
   spend in USD of its runs beside the plan's estimate, as
   `T<n> cost: actual <s> s, <USD|unknown> USD; estimate <s> s, <USD> USD`.

@@ -214,7 +214,9 @@ The changed code SHALL pass the repo's linter with the repo's configuration.
 - Ids are local to the spec (`R1`, `R1.S1`) and qualified outside it
   (`add-vqls-backend/R1.S1`). When later work changes behavior an integrated
   spec requires, list those qualified ids under `supersedes`; the plan then
-  has a test task that updates the old tests in `tests/`.
+  has a test task that writes their replacements in `changes/<id>/tests/`,
+  verify gives the old tests `superseded by <key>`, and integrate moves them
+  out of `tests/` (§7, §8).
 - A fix that restores behavior an integrated spec already requires may cite
   that requirement in place of new ones: a five-line spec.
 - **Quality checks** go in the Quality section, one per tool or review: what
@@ -300,13 +302,18 @@ code it describes has written the code instead.
    (role test, after every build and test task, with `needs:` naming the
    environment class the tests require), whole or in shards, each shard
    with its own `needs:`. A spec with entries under `supersedes` also gets a
-   test task that updates the matching tests in `tests/`.
+   test task that writes their replacements in `changes/<id>/tests/`;
+   verify gives the old tests `superseded by <key>`, and integrate moves
+   them out of `tests/` (§7, §8).
 7. **Review tasks:** the plan has one review per wave of build tasks, a
    review of one build task only where its entry has `- risk: at risk`, and
    the whole-change review. A wave is a group of build tasks the dependency
    summary runs together, and its review covers those of them not reviewed
    alone. A plan whose build tasks form one wave has one review, the
-   whole-change review.
+   whole-change review. It covers every build task, those marked at risk
+   included; its `after:` list names them, and it comes before verify. A
+   wave whose build tasks are all marked at risk has no wave review: their
+   own reviews cover it.
 8. **Integrate task:** role lead, after verify and the whole-change review;
    it lists the docs and open plans this change touches.
 9. **Test map:** one row per scenario, with these columns, in this order:
@@ -328,7 +335,10 @@ test without one.
 - **Risk table.** Section 6 opens with a risk table, one row per
   requirement. The plan marks each requirement `at risk` or `small`, with
   its reason, where the human sees it: at the skim at project size, and in
-  the plan itself at small size.
+  the plan itself at small size. A requirement is at risk when a fault in
+  it would be costly or would show only late, such as a fix for a reported
+  defect seen only in a live session, or a rule that decides whether a
+  change is verified; otherwise it is small.
 
   ```
   | Requirement | Risk | Reason |
@@ -352,8 +362,9 @@ test without one.
   lists its wall time in s, its spend in USD and the caps the budget policy
   asks for, with the totals of those estimates; a script-class check gives
   its expected run time only. Cost classes are those of §7. An estimate is
-  not a quota. The lead asks the operator only about runs the plan does not
-  list or past twice the estimate (§11). Section 6 gives every agent-class
+  not a quota. The lead asks the operator only about an agent-class or
+  live-class run the plan does not list, or one past twice the estimate
+  (§11). Section 6 gives every agent-class
   or live-class run the plan lists in this table, with a Total row:
 
   ```
@@ -467,8 +478,10 @@ T<n> <DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT>[, <repo> <sha7>..<sha7>][, 
 build task only where its entry has `- risk: at risk`, and the whole-change
 review (§4). Dispatch a wave's review once every build task it covers has
 reported, and an at-risk task's own review once that task reports. A plan
-whose build tasks form one wave has one review, the whole-change review,
-which is then also the review of each build task (§7). Record the review
+whose build tasks form one wave has one review, the whole-change review. It
+covers every build task, those marked at risk included, and is then their
+review (§7). A wave whose build tasks are all marked at risk has no wave
+review: their own reviews cover it. Record the review
 that covers a build task under that task's number, one line per build task
 it covers, as
 `T<n> review: <spec ok|spec issues>; <k> <Severity> [<repo>/<path>:<line>]`.
@@ -518,10 +531,11 @@ signatures.
 **Lead.** Write the test-writing brief from `templates/records/test-brief.md`.
 It carries only what this section allows: the test task's own entry, the
 spec's path, and the interface contract, global constraints and test map
-copied from the plan, with the commit sets to start from. Its task entry
-covers the scenarios of the requirements the plan marks at risk, and no
-others. It never holds an implementation body, a diff, a builder report or a
-build-task step.
+copied from the plan, with the commit sets to start from, and under its
+global constraints the plan's rows for the expensive runs the task makes.
+Its task entry covers the scenarios of the requirements the plan marks at
+risk, and no others. It never holds an implementation body, a diff, a
+builder report or a build-task step.
 
 **Test agent:**
 
@@ -733,9 +747,11 @@ with two results that are no bar:
 
 Every other result is a bar: `fail`, `not-run`, `harness-error`, a missing
 result, a `not-selected` test that the selection picks, and a
-`superseded by` result that lacks either condition. A sharded verify applies
-the same rule over its shards' latest records together (Sharded verify,
-below).
+`superseded by` result that lacks either condition. The two results that can
+be no bar are regression-test results: on a scenario of the spec, a unit
+suite, a quality check or a test in `changes/<id>/tests/`, either one is a
+bar. A sharded verify applies the same rule over its shards' latest records
+together (Sharded verify, below).
 
 ### Harness errors
 
@@ -777,7 +793,9 @@ its own task number. The whole-change fix wave runs only when the
 whole-change review has a Critical or Important finding, and then also
 takes the batched Minor findings; with none, they are parked by one ruling
 and listed in the final report. The fix wave goes to one builder, then one
-re-review. The lead rules on what remains.
+re-review. The lead rules on what remains. In a plan whose build tasks form
+one wave, a fix that lands after the whole-change review, such as one routed
+from a verify failure, gets a review of its fix diff only.
 
 ### Sharded verify
 
@@ -806,8 +824,9 @@ together only when all three hold:
 - every one of them is at the current commit set;
 - none of them gives a result that is a bar by the green rule (above), with
   each `superseded by <key>` result's `<key>` looked for in all of them;
-- together they give, for every scenario, regression test, unit suite and
-  declared quality check, a pass or a result that is no bar.
+- together they give a pass for every scenario, unit suite, declared
+  quality check and test of the change, and for every regression test a
+  pass or a result that is no bar.
 
 The change is verified only when they are green together and the
 whole-change review has no open Critical or Important finding. A shard with
@@ -1052,10 +1071,11 @@ goes. Machine paths never go in a brief. Each role's definition is
   task, `after: [T<k>]` means T<k> has reported and its commit exists; T<k>
   is done only when that review closes. A wave's review lists each build
   task it covers, and each of them is done only when that review closes.
-  On the mesh this is a workflow you drive (PROTOCOL §8.1), and its record lives in the bus. Mesh workflows do
-  not yet take steps with `after` lists (PROTOCOL §8.1 advances one cursor),
-  so until they do, follow the interim rule: each cycle, the lead dispatches
-  every task whose `after` tasks are all done.
+  On the mesh this is a workflow you drive (PROTOCOL §8.1), and its record
+  lives in the bus. Mesh workflows do not yet take steps with `after` lists
+  (PROTOCOL §8.1 advances one cursor), so until they do, follow the interim
+  rule: each cycle, the lead dispatches every task whose `after` tasks are
+  all done.
 - **What the space records.** Record each dispatch as
   `dispatch T<n> -> <role> (<local|mesh>, <env class|any>)[, base <repo> <sha7>]`.
   The line names the role, `local` or `mesh`, and the environment class, and
@@ -1085,7 +1105,9 @@ goes. Machine paths never go in a brief. Each role's definition is
     and a run held for want of an operator as
     `T<n> not dispatched: <run>; past twice the estimate, no operator present`.
   - The brief of a test task quotes the plan's rows for the expensive runs
-    it makes, with their caps and estimates.
+    it makes, with their caps and estimates: under `## Global constraints`
+    in a test-writing brief, and in `## Task` in a verify brief. The rows
+    hold nothing of the build.
   - After each test task, the lead records the actual wall time in s and
     spend in USD of its runs beside the plan's estimate, as
     `T<n> cost: actual <s> s, <USD|unknown> USD; estimate <s> s, <USD> USD`.

@@ -103,9 +103,8 @@ A report at the brief's result path, in the report format
    output. A builder's test is a unit test or, in a repo with no unit suite,
    a check in the build task's done-when. Such a check is one command with
    its expected output, red at base and green at the head, and verify
-   reruns it. For a
-   requirement not at risk, your tests are its only ones, and the review
-   checks that each exercises its scenario.
+   reruns it. For a requirement not at risk, your tests are its only ones,
+   and the review checks that each exercises its scenario.
 3. Write the least code that makes it pass. Run it again and watch it pass.
    Keep the output.
 4. Test anything that depends on internals, such as a branch the public
@@ -153,7 +152,10 @@ A report at the brief's result path, in the report format
    two parts. The tester learns where to look from you, never what the
    answer is. Name in the "for the tester" part the risk it covers: the lead
    routes a suggestion to the test agent only when it covers a risk no
-   planned test covers, naming that risk, and declines the rest.
+   planned test covers, naming that risk, and declines one bound for the
+   test agent whose risk a planned test already covers. A suggestion of
+   behavior the spec does not state goes to the spec author, and one that
+   is internal only comes back to you for a unit test (`PROCESS.md §6`).
 10. Write the report.
 
 When a test fails and you do not know why: reproduce it, read the whole

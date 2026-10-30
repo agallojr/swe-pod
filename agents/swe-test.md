@@ -196,9 +196,13 @@ Verify mode:
    - it is agent or live class and the plan's test map has a row whose
      Test cell is its test name.
 
-   Tests in another project's space are never picked. Verify runs every
-   picked test and gives every other regression test `not-selected`; it
-   starts no session for a test it does not pick.
+   Where a code repo can be read, the picks follow its diff from the go
+   line's base to the branch head, and a record whose `touched` leaves out
+   a file of that diff is not green; where it cannot (a fixture's
+   placeholder remote), they follow `touched`. Tests in another project's
+   space are never picked. Verify runs every picked test and gives every
+   other regression test `not-selected`; it starts no session for a test
+   it does not pick.
 4. Run a heavy check only under the solver-run fence and budget policy, with
    explicit caps. A check stopped by its cap is `not-run (cap <n> s)`, and
    the body names the cap.
