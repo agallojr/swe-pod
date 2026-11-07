@@ -6,7 +6,7 @@
 
 - Spec id: `swe-pod`. Requirements are cited as `swe-pod/R4`, scenarios as
   `swe-pod/R4.S1`.
-- size: project
+- size: large
 - owner: agallojr
 - repos: [swe-pod, agent-mesh]
 - supersedes: []
@@ -153,7 +153,7 @@ Space stays on `main`.
 | Stage | Role | Reads | Writes | Done when | Gate |
 |---|---|---|---|---|---|
 | **spec** | spec, with the human | the request, the code, earlier specs it touches | `spec.md` | every requirement has a scenario; the human approved | human approves |
-| **plan** | plan | the approved spec, the code | `plan.md` | every requirement traces to a build task and every scenario to a test; self-review passes | human skims (project size) |
+| **plan** | plan | the approved spec, the code | `plan.md` | every requirement traces to a build task and every scenario to a test; self-review passes | human skims (large change only) |
 | **build** | build; review per task | its brief | code and unit tests on `change/<id>` | each task passes its done-when and its review | none |
 | **verify** | test; review | spec, project-level tests, the commit set | evidence, whole-change review | every project-level test, unit suite and declared quality check passes at the commit set; no open Critical or Important finding | none |
 | **integrate** | human, lead | everything above | merges, pins, docs, plans, final report, archive | merged in dependency order; tests promoted; report filed | human merges |
@@ -198,7 +198,7 @@ nothing else (R2).
 ```markdown
 # add-vqls-backend: let the nozzle solver use VQLS as its linear solver
 
-- size: project
+- size: large
 - owner: agallojr
 - repos: [qutil, fvm]
 - supersedes: []                 # earlier requirement ids this work changes
@@ -271,10 +271,11 @@ engineer who has never seen the code or the spec. It holds the decisions they
 cannot make alone. A plan longer than the code it describes has written the
 code instead. (SP)
 
-At project size the planner is a fresh agent that never saw the spec
+For a large change the planner is a fresh agent that never saw the spec
 conversation. Its questions about the spec are the builder check: each is
 answered in the spec, decided and listed under Open calls, or sent to the
-human in one message, most important first.
+human in one message, most important first. For a small or medium change
+the spec author may write the plan.
 
 **`changes/<id>/plan.md`:**
 
@@ -329,10 +330,21 @@ every scenario maps to a test; no step says "TBD", "handle edge cases" or
 "add tests"; names and types agree across tasks; every task has role, after,
 runs and done-when.
 
-At project size the human skims the plan before any dispatch: every task
-traces to a requirement, nothing reaches outside the approved scope, and no
-task hides the real decisions. Then says go. At small size, approving the spec
-is the go.
+For a large change the human skims the plan before any dispatch: every
+task traces to a requirement, nothing reaches outside the approved scope, and
+no task hides the real decisions. Then says go. For a small or medium change,
+approving the spec is the go, with no plan skim.
+
+> Note (change `add-size-gauge`, `swe-pod-process@3`): the plan, the blind
+> tests and the reviews go by size (§5.7). A small change has a terse plan
+> the spec author may write, a blind test for every scenario, and one review,
+> the whole-change review. A medium change has a short plan with its risk
+> table, which the spec author may write, one review per wave of build tasks
+> when it has more than one wave, and the whole-change review. A large change
+> has a full plan by a fresh planner, which the operator skims before the go,
+> and one review per wave of build tasks, a review of each build task marked
+> at risk, and the whole-change review. At every size a test agent runs
+> verify (add-size-gauge/R4 to R8).
 
 ### 5.3 Build
 
@@ -353,28 +365,30 @@ For each build task the lead writes a brief, dispatches a fresh builder
   never the builder's session. It returns spec compliance (missing, extra,
   misread) and quality (structure, error handling, whether tests check real
   behavior). Each finding is Critical, Important or Minor, with file and line.
-- Critical or Important findings start the fix loop: rounds 1 to 3 to the same
-  builder, rounds 4 and 5 to a fresh builder on a stronger model, each ending
-  with a review of the fix diff only. Past round 5 the lead rules on each open
-  finding (§9). Minor findings go to the ledger for the whole-change review.
+- Critical or Important findings start the fix loop: at most 2 rounds per
+  task for a small change and 3 for a medium or large one, every round to the
+  same builder, each ending with a review of the fix diff only. At the cap
+  the lead rules on each open finding (§9) and, where a finding comes from a
+  requirement read two ways, sends the spec author a proposed edit, which
+  reopens approval for that edit only. Minor findings go to the ledger for
+  the whole-change review.
 
-  > Note (change `right-size-testing`, `swe-pod-process@2`): rounds 4 and 5
-  > go to a fresh builder on the same model, the most capable available; only
-  > Critical and Important findings start a fix round, and Minor ones are
-  > fixed in the whole-change fix wave or parked by a ruling
-  > (right-size-testing/R11, R15).
+  > Note (change `add-size-gauge`, `swe-pod-process@3`): the cap above
+  > replaces the earlier longer loop and its fresh builder. Only Critical and
+  > Important findings start a fix round; Minor ones are fixed in the
+  > whole-change fix wave or parked by a ruling, and listed in the final
+  > report (add-size-gauge/R6, R13; right-size-testing/R11).
 
 - Builders commit to the change's one branch, `change/<id>`, with trailers
   `Change: <id>` and `Task: <n>`, rebase on it before pushing, and push only
   to it. They never create a branch. A rebase conflict means the plan's
   independence claim was wrong: the builder stops and reports BLOCKED.
-- Pick the model for the work: a cheaper one for a mechanical task with a
-  complete brief, the most capable one for design judgment and the
-  whole-change review.
+- Every role, task and fix round runs on Opus, at every size, and never on
+  a lesser model to save cost.
 
-  > Note (change `right-size-testing`, `swe-pod-process@2`): replaced. Every
-  > role runs on the most capable model available, and the lead never picks a
-  > lesser model to save cost (right-size-testing/R15).
+  > Note (change `add-size-gauge`, `swe-pod-process@3`): this replaces the
+  > earlier rule that picked a model per task. Each role definition says
+  > `model: opus` (add-size-gauge/R10).
 
 ### 5.4 Project-level tests
 
@@ -468,13 +482,13 @@ The lead routes each failure:
 | Spec ambiguous or wrong, only the human can say | the human, through the spec author | a proposed edit to the spec |
 | Flaky or environmental | the test agent, debugging per §9 | the runs that disagree |
 
-After the first green run, a fresh reviewer on the most capable model
-available reviews the whole change: the spec, the plan, every repo's diff, the
-latest evidence, and the ledger's deferred minors and rulings. It checks
-completeness (every requirement has code and a passing test), correctness (the
-code does what the spec means, edge cases included) and coherence (the plan's
-decisions show in the code). (OS) Its findings go to one builder in one fix
-wave, then one re-review; the lead rules on what remains. (SP)
+After the first green run, a fresh reviewer reviews the whole change: the
+spec, the plan, every repo's diff, the latest evidence, and the ledger's
+deferred minors and rulings. It checks completeness (every requirement has
+code and a passing test), correctness (the code does what the spec means, edge
+cases included) and coherence (the plan's decisions show in the code). (OS)
+Its findings go to one builder in one fix wave, then one re-review; the lead
+rules on what remains. (SP)
 
 ### 5.6 Integrate
 
@@ -504,18 +518,28 @@ wave, then one re-review; the lead rules on what remains. (SP)
 
 ### 5.7 Sizes
 
-Every size starts with a spec.
+Every size starts with a spec. The sizes small, medium and large are one
+gauge, with small the default; a spike is outside it.
 
-| Size | When | Spec | Plan | Human gates |
-|---|---|---|---|---|
-| small | one intent, a few requirements, one repo, low risk | short | short; the planner may be the spec author | spec (also the go), merge |
-| project | several requirements or repos, interface or data-format changes, anything costly to get wrong | full | full; fresh planner | spec, plan skim, merge |
-| spike | building something throwaway is the fastest way to learn | the question and what would answer it | none | none |
+| Size | When | Spec | Plan | Blind tests | Reviews | Fix rounds | Human gates |
+|---|---|---|---|---|---|---|---|
+| small (default) | one intent, about 3 requirements, one repo, low risk | short | terse; the spec author may write it | every scenario | the whole-change review | 2 | spec approval (also the go), merge |
+| medium | several requirements, or one repo with moderate risk | full | short, with the risk table; the spec author may write it | requirements the plan marks at risk | one per wave when there is more than one wave, and the whole-change review | 3 | spec approval (also the go), merge |
+| large | several repos, an interface or data-format change, anything costly to get wrong | full | full, by a fresh planner, with the risk and cost tables | requirements the plan marks at risk | one per wave, one per build task marked at risk, and the whole-change review | 3 | spec approval, plan skim, merge |
+| spike | building something throwaway is the fastest way to learn | the question and what would answer it | none | none | none | none | none |
 
 A spike has one build agent, no review, and never merges. Its output is a
 write-up in `notes/`. Keeping anything it produced is a new change with its
-own spec. If a change grows mid-flight, whoever notices says so and it steps
-up a size. A change that needs "and also" is two changes. (OS)
+own spec. A change is small unless its approved spec says another size; the
+spec author suggests a size with its reason, and the operator sets it. No
+agent changes a size: an agent that sees the change outgrow its size says so
+in one line to the lead, who tells the operator. A change that needs "and
+also" is two changes. (OS)
+
+> Note (change `add-size-gauge`, `swe-pod-process@3`): the gauge above
+> replaces two sizes: the earlier small is now medium, and the earlier
+> project is now large. An archived spec keeps its old size name and reads by
+> the legacy-names note of `PROCESS.md` §9 (add-size-gauge/R1 to R3, R11).
 
 ## 6. Roles
 
@@ -529,31 +553,29 @@ up a size. A change that needs "and also" is two changes. (OS)
 | **test** | project-level tests, evidence | writes code or the spec; reads implementation bodies, diffs or builder reports while writing tests |
 | **review** | review records | changes what it reviews; trusts a report over the diff |
 
-**Independence.** These must be different agents: test and build, test and
-spec, review and build, spec and plan at project size. "Different agent" means
-at least a fresh context started from a brief, never another agent's session.
-Where a mistake would be costly, use a different model or node too, so blind
-spots are not shared. One node may hold several roles if each task runs as its
-own agent.
+**Independence.** At every size, the spec author, the builder, the test agent
+and the reviewer are four different fresh agents; for a large change the
+planner is different from the spec author too. "Different agent" means at
+least a fresh context started from a brief, never another agent's session.
+Where a mistake would be costly, use another node too, so blind spots are not
+shared. One node may hold several roles if each task runs as its own agent.
 
-> Note (change `right-size-testing`, `swe-pod-process@2`): independence between
-> agents comes from a fresh session or another node, never from a lesser
-> model, and every role, review included, runs on the most capable model
-> available (right-size-testing/R15).
+> Note (change `add-size-gauge`, `swe-pod-process@3`): independence between
+> agents comes from a fresh session or another node, and every role runs on
+> Opus (add-size-gauge/R9, R10).
 
 **Placement.**
 
 | Role | Usually |
 |---|---|
 | spec, lead | local, with the human |
-| plan | local, or remote at project size |
+| plan | local, or remote for a large change |
 | build | local or remote; several at once when the plan allows |
 | test | remote, on a node of the environment class the checks need; tests are heavy |
-| review | anywhere, on the most capable model available for the whole-change review |
+| review | anywhere |
 
-> Note (change `right-size-testing`, `swe-pod-process@2`): every role runs
-> on the most capable model available, not only the whole-change review
-> (right-size-testing/R15).
+> Note (change `add-size-gauge`, `swe-pod-process@3`): every role runs on
+> Opus, the whole-change review among them (add-size-gauge/R10).
 
 **Single seat.** Without a mesh, one interactive session is spec author,
 planner, lead and the space's librarian, and dispatches fresh local subagents
@@ -669,7 +691,7 @@ context loss or handoff. Trust it, and the git logs, over memory. (SP)
 2026-11-02T14:06Z dispatch T5 -> test (mesh, linux-server)
 2026-11-02T14:41Z T3 DONE, qutil 77b01d4..8e1d0c4, unit 14/14 pass
 2026-11-02T14:50Z T3 review: spec ok; 1 Important qutil/linsolve/vqls.py:88
-2026-11-02T15:02Z T3 fix round 1/5: 1 addressed, 0 open, 8e1d0c4..a91f2e0
+2026-11-02T15:02Z T3 fix round 1/3: 1 addressed, 0 open, 8e1d0c4..a91f2e0
 2026-11-02T15:20Z T5 at base: R1.S1 fail (no VQLS backend), R1.S2 fail (flag unknown)
 2026-11-02T15:31Z Ruling: flag named --vqls-ansatz, not --ansatz; existing
                   backend flags carry a prefix; rename costs one task
@@ -860,6 +882,11 @@ approve one.
 A test-writing brief SHALL contain the spec, the interface contract, the
 global constraints and the test map, and SHALL contain no implementation body,
 diff, builder report or build-task step.
+
+> Note (change `add-size-gauge`, `swe-pod-process@3`): superseded in part by
+> add-size-gauge/R5: the scenarios a test-writing brief covers go by size,
+> every scenario for a small change and those of the requirements the plan
+> marks at risk for a medium or large one. The brief's contents are as above.
 
 #### R9.S1 Brief contents
 - GIVEN a test-writing brief
@@ -1141,9 +1168,10 @@ Defaults chosen in this draft; check these when reviewing.
    remote test agents and reviewers need the commits.
 6. Review sits in two places: per build task during build, and whole-change
    during verify. Both are the review role.
-7. At project size the planner is a fresh agent, and its questions serve as
-   the builder check.
-8. Fix loop: at most 5 rounds per task, then a ruling.
+7. For a large change the planner is a fresh agent, and its questions serve
+   as the builder check.
+8. Fix loop: at most 3 rounds per task, 2 for a small change, then a ruling
+   (add-size-gauge/R13).
 9. A project's deliverables live in its own repos: code repos for code, a
    deliverable repo for a non-code project. The Project Space holds only the
    process, its records and the project-level tests.

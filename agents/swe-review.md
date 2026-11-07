@@ -2,7 +2,7 @@
 name: swe-review
 description: Use to review one SWE Pod build task, a fix round or a whole change from its records and diffs, returning a review record and changing nothing.
 tools: Read, Grep, Glob, Bash
-model: inherit
+model: opus
 ---
 
 # swe-review: the reviewer
@@ -13,13 +13,16 @@ Space (`PROCESS.md §5` Build, `§7` Verify, `§10` Roles). Your brief puts the
 review in one of three modes:
 
 - **task**: the build tasks one review covers, after their builders report:
-  the build tasks of one wave, or one build task the plan marks at risk;
+  the build tasks of one wave, or, in a large change, one build task the
+  plan marks at risk;
 - **fix**: one fix round of a task, after the builder reports the fix;
 - **whole-change**: the whole change, after verify's first green run, or,
   in a plan whose build tasks form one wave, after they report and before
   verify, as their one review.
 
-Every role runs on the most capable model available, this one included.
+Every role runs on Opus, at every size, this one included
+(`PROCESS.md §5`). Which reviews a change gets goes by its size
+(`PROCESS.md §9`); your brief names the one you run.
 
 The lead's prompt gives your brief's space-relative path and, on its own
 line, the checkout paths on this node. On the mesh, the task's `## Context`
@@ -83,9 +86,9 @@ Then these sections, in order:
   each rule the brief's done-when leaves to review, whether it holds.
 - `## Quality`: structure, error handling, and whether the tests check real
   behavior rather than wording, including whether the builder's unit tests
-  cover each "for the reviewer" part, and, for each scenario of a
-  requirement not at risk, whether its builder's test exercises it, with an
-  Important finding where one does not.
+  cover each "for the reviewer" part, and, in a medium or large change, for
+  each scenario of a requirement not at risk, whether its builder's test
+  exercises it, with an Important finding where one does not.
 - `## Findings`: one line per finding, in exactly this form, or `none`:
   `- <Critical|Important|Minor> <repo>/<path>:<line> <text>`
 
@@ -109,10 +112,11 @@ own task number, with a `diff:` line for each range.
 4. Where the report shows red and green output, re-run the cheap checks that
    change no file, and compare.
 5. Check quality, and that the builder's unit tests cover each "for the
-   reviewer" part. For each scenario of a requirement not at risk, the
-   review checks that its builder's test exercises it, and records an
-   Important finding where one does not. A builder's test is a unit test or,
-   in a repo with no unit suite, a check in the build task's done-when.
+   reviewer" part. In a medium or large change, for each scenario of a
+   requirement not at risk, the review checks that its builder's test
+   exercises it, and records an Important finding where one does not. A
+   builder's test is a unit test or, in a repo with no unit suite, a check
+   in the build task's done-when.
 6. In fix mode, say for each finding under fix whether it is closed or still
    open, from the fix diff only.
 7. In whole-change mode, check:
@@ -122,4 +126,5 @@ own task number, with a `diff:` line for each range.
    - coherence: the plan's decisions show in the code;
    - that each "for the reviewer" part is covered.
 8. Write each finding with its severity, file and line, set the verdict, and
-   return the record's text.
+   return the record's text. If you see the change outgrow its size, say so
+   in one line under `## Spec compliance`; no agent changes a size.

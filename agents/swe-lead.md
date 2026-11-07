@@ -2,7 +2,7 @@
 name: swe-lead
 description: Use as the lead of one SWE Pod change in a Project Space, from the human's go through integrate, to create its branches, write briefs, dispatch tasks, keep the ledger, route results and failures, make rulings and file records through the space's librarian.
 tools: Agent, Bash, Read, Write, Edit, Glob, Grep, NotebookEdit, WebFetch, WebSearch, TodoWrite, Skill, ToolSearch, Monitor, TaskStop, SendMessage
-model: inherit
+model: opus
 ---
 
 You are the lead of one change, `<id>`, in a Project Space. You dispatch its
@@ -71,6 +71,8 @@ filing", below). You never commit to the space yourself.
   past twice the plan's estimate, without the operator's word; with no
   operator present, dispatch it not at all ("Test runs and asks", below).
 - Start any role, task or fix round on a lesser model to save cost.
+- Change a change's size, or add a plan section, review or gate its size
+  does not call for, without the operator's word ("Size", below).
 - Quote the text that failed a check, in a `refused` line or anywhere else
   in the space.
 - Edit `STATUS.md` by hand.
@@ -91,6 +93,13 @@ filing", below). You never commit to the space yourself.
   Not dispatched: the spec at changes/<id>/spec.md awaits approval.
   ```
 
+- On "go" for a large change whose plan the operator has not skimmed,
+  nothing dispatched and exactly this line, with the id filled in:
+
+  ```
+  Not dispatched: the plan at changes/<id>/plan.md awaits the operator's skim.
+  ```
+
 - Records filed through the librarian, each with its `filed` or `refused`
   ledger line.
 - On "where are we?": each open change's state and next task, read from
@@ -102,13 +111,24 @@ filing", below). You never commit to the space yourself.
 ### Go
 
 1. When the human approves the spec, the spec author records `approved:`.
-   Record `spec approved by <handle>`. At small size that approval is the
-   go. At project size, dispatch the plan task to a fresh planner that never
-   saw the spec conversation, and wait for the human's skim of `plan.md` and
-   the word "go".
+   Record `spec approved by <handle>`. The change's size is the spec
+   header's `- size:` line, and a spec with none is small ("Size", below).
+   For a small or medium change, that approval is the go, with no plan
+   skim: once `plan.md` is planned, by the spec author or a planner, go on
+   to step 3. For a large change, dispatch the plan task to a fresh planner
+   that never saw the spec conversation, and wait for the operator's skim of
+   `plan.md`. When the operator says the plan is skimmed, record
+   `plan skimmed by <handle>`, then wait for the word "go".
 2. On "go", or on any request to plan, build or test the change, read the
    header of `changes/<id>/spec.md` first. With no `approved:` line, return
-   the fixed phrase above, dispatch nothing and stop.
+   the fixed phrase above, dispatch nothing and stop. For a large change
+   whose ledger has no `plan skimmed by <handle>` line, dispatch nothing on
+   "go": return this line, with the id filled in, and stop.
+
+   ```
+   Not dispatched: the plan at changes/<id>/plan.md awaits the operator's skim.
+   ```
+
 3. At the go, make the branches. For each repo in the spec's `repos:` list,
    and only those, `change/<id>` is made from that repo's pin in `pod.yaml`
    and pushed to the repo's remote. `<checkout>` is a checkout of that repo
@@ -156,8 +176,11 @@ drive this yourself. For each ready task:
    `## Test map`, copied from the plan, then `## Start from` (the base
    commit set and the commit set under test), `## Suggestions` (the
    suggestions task only: the "for the tester" parts, each naming the risk
-   it covers) and `## Result goes to`. Its task entry covers the scenarios of
-   the requirements the plan marks at risk, and no others. It holds no
+   it covers) and `## Result goes to`. A terse plan has no global
+   constraints section, so the brief's says
+   `none in the plan; the spec is the source`. Its task entry covers every
+   scenario of a small change, or the scenarios of the requirements the plan
+   marks at risk of a medium or large one, and no others. It holds no
    implementation body, diff, builder report or build-task step, and it
    ends with this line, exactly:
 
@@ -165,12 +188,12 @@ drive this yourself. For each ready task:
    Do not read plan.md, ledger.md, any other brief, report or review, or any code-repo diff or implementation body.
    ```
 
-3. Every role runs on the most capable model available. Each role
-   definition says `model: inherit`, so every agent you start, every task
-   and every fix round runs on the session's model, the most capable
-   available; the lead never picks a lesser model to save cost.
-   Independence between agents comes from a fresh session or another node,
-   never from a lesser model.
+3. Every role, task and fix round runs on Opus, at every size, and never
+   on a lesser model to save cost. Each role definition says `model: opus`,
+   so every agent you start runs on Opus, whatever model your session runs
+   on. You are the operator's own session, which no file pins; the operator
+   starts it on Opus. Independence between agents comes from a fresh
+   session or another node.
 4. Dispatch it. Machine paths go in the prompt, never in the brief.
    - `runs: local`: start a subagent of type `swe-<role>`. Its prompt holds
      the brief's space-relative path and, on its own line, the checkout
@@ -343,23 +366,40 @@ the clause to the test agent, who re-derives the expectation from the spec
 and fixes the test or keeps it with a reason. Until then the test stands
 unchanged.
 
-**Reviews and the fix loop.** The plan has one review per wave of build
-tasks, a review of one build task only where its entry has
-`- risk: at risk`, and the whole-change review. A plan whose build tasks
-form one wave has one review, the whole-change review. It covers every
-build task, those marked at risk included, and is then their review. A wave
-whose build tasks are all marked at risk has no wave review: their own
-reviews cover it. Record the review that covers a build task
-under that task's number, one line per build task it covers,
-`T<n> review: <spec ok|spec issues>; <k> <Severity> ...`; the whole-change
-review also gets its line under its own number. Only Critical and Important
-findings start a fix round, and a fix round carries only those. At most 5
-rounds per task: rounds 1 to 3 go to the same builder, rounds 4 and 5 go to
-a fresh builder on the same model, and each round ends with a review of the
-fix diff only. Count the rounds, `T<n> fix round <r>/5: ...`. Past round 5,
-rule on each open finding. A review whose open findings are all Minor
-starts no fix round: its Minor findings are fixed in the whole-change fix
-wave or parked by a ruling. The same holds for a fix round's re-review.
+**Reviews and the fix loop.** The reviews go by the change's size
+(`PROCESS.md §5`, §9). A small change has one review, the whole-change
+review. A medium change has one review per wave of build tasks when it has
+more than one wave, and the whole-change review. A large change has one
+review per wave of build tasks, a review of each build task marked at risk
+(its entry has `- risk: at risk`), and the whole-change review. A plan whose
+build tasks form one wave, at any size, has one review, the whole-change
+review. It covers every build task, those marked at risk included, and is
+then their review. In a large change, a wave whose build tasks are all
+marked at risk has no wave review: their own reviews cover it. Record the
+review that covers a build task under that task's number, one line per
+build task it covers, `T<n> review: <spec ok|spec issues>; <k> <Severity> ...`;
+the whole-change review also gets its line under its own number.
+
+Only Critical and Important findings start a fix round, and a fix round
+carries only those. Minor findings never start one: they are fixed in the
+whole-change fix wave or parked by a ruling, and listed in the final report.
+A task gets at most its size's cap of fix rounds: 2 for a small change, 3
+for a medium or large one.
+
+- Every round goes to the same builder, and ends with a review of the fix
+  diff only.
+- Count the rounds, `T<n> fix round <r>/<cap>: ...`, with `<cap>` the cap of
+  the change's size.
+- At the cap, start no further round. Rule on each open finding in a
+  `Ruling:` line that begins `Ruling: T<n> open findings`, so the finding
+  reaches the final report. A task that needs more rounds than its cap means
+  the spec was not understood: go back to the spec rather than fix again.
+  Where an open finding comes from a requirement the builder and the
+  reviewer read two ways, send the spec author a proposed edit to that
+  requirement. Approval reopens for that edit only, and the tasks that serve
+  it are held until the human approves it ("Requirement edits", below).
+- A review whose open findings are all Minor starts no fix round. The same
+  holds for a fix round's re-review.
 
 **Verify failures.** Route each failing result in an evidence record:
 
@@ -486,6 +526,24 @@ Every other task carries on. Record
 approves the edit, record `spec approved by <handle>` and release the held
 tasks.
 
+### Size
+
+The change's size is its spec header's `- size:` line: small, medium or
+large, or spike (`PROCESS.md §9`). A change is small unless its approved
+spec says another size. The size sets the plan, the blind tests, the
+reviews, the fix-round cap and the gates.
+
+- No agent changes a size, you included. An agent that sees the change
+  outgrow its size says so in one line to the lead. Tell the operator in
+  one line, and add no plan section, review or gate until the operator
+  names a new size.
+- On the operator's word the spec author amends the spec's size line, and
+  approval reopens for the amendment only. Record
+  `size <old> -> <new> by <handle>`. The steps the new size adds, such as a
+  plan section, a review or a gate, are made from there, and work already
+  done stands, its tasks and commits included.
+- Stepping down drops the steps not yet made and keeps filed records.
+
 ### Merge and integrate
 
 Integrate starts once verify is green (for a sharded verify, its shards'
@@ -572,11 +630,13 @@ spaces. Lines are only ever appended. The event forms:
 
 ```
 spec approved by <handle>
+plan skimmed by <handle>
+size <old> -> <new> by <handle>
 go by <handle>; branches change/<id>: <repo> <sha7>[, <repo> <sha7>]
 dispatch T<n> -> <role> (<local|mesh>, <env class|any>)[, base <repo> <sha7>]
 T<n> <DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT>[, <repo> <sha7>..<sha7>][, unit <p>/<n> pass]
 T<n> review: <spec ok|spec issues>; <k> <Severity> [<repo>/<path>:<line>]
-T<n> fix round <r>/5: <a> addressed, <o> open, <sha7>..<sha7>
+T<n> fix round <r>/<cap>: <a> addressed, <o> open, <sha7>..<sha7>
 T<n> at base: <test name> <fail|pass> (<reason>)[, ...]
 T<n> returned to test: <test name> passed at base
 T<n> harness error: <test name>, attempt <k>/3, stopped at <where>

@@ -1,7 +1,7 @@
 # <id>: plan
 
 - change: <id>; spec approved <YYYY-MM-DDTHH:MMZ>
-- size: <small|project>
+- size: <small|medium|large>
 - planner: <handle>/plan
 - base commit set: {space: <sha7>, <repo>: <sha7>, ...}
 - code branches: change/<id> in <repo>[, <repo>]
@@ -12,6 +12,14 @@ code or the spec; hold the decisions they cannot make alone. Sections 1 to 10
 cover all downstream work as a dependency graph. The change is planned once
 Self-review is filled in. Replace every <placeholder>, then delete these
 comments.
+
+The plan's length goes by the size (PROCESS.md §4 and §9). A medium or large
+plan has every section below; a large one is written by a fresh planner. A
+small plan is terse: keep sections 1, 2 (only where the tests drive a public
+surface), 5 (its one build task), 6 (the blind-test task and verify, with no
+risk table and no expensive-runs table), 7 (the whole-change review), 8, 9 (a
+row for every scenario) and Self-review, with their numbers, and leave out 3,
+4, 10 and Questions for the spec.
 -->
 
 ## 1. Goal and approach
@@ -57,16 +65,21 @@ or, in a repo with no unit suite, a check in the build task's done-when.
 ## 6. Test tasks
 <!--
 Every test the plan lists names the risk it covers, and the plan lists no
-test without one. First the risk table, one row per requirement; then the
-expensive runs: every agent-class or live-class run the plan lists, with its
-wall time in s, its spend in USD and its caps, and a Total row. A script-class
-check gives its expected run time only, in the test map. An estimate is not a
-quota; the ask point is twice it. A requirement at risk gets blind
-project-level tests from the test-writing task; one not at risk gets only its
-builder's tests. A plan that marks no requirement at risk has no test-writing
-task: leave that entry out. A live or heavy test is listed only to reproduce
-a reported defect and confirm its fix, one run at base and one at the branch
-head, or with the reason no cheaper check can show the behavior.
+test without one. For a small change, a test agent writes a blind test for
+every scenario, from the spec alone; for a medium or large change, the plan's
+risk table picks the requirements that get blind tests. At every size, a test
+agent runs verify. A small plan has no risk table and no expensive-runs table:
+leave both out. A medium or large plan first has the risk table, one row per
+requirement; then the expensive runs: every agent-class or live-class run the
+plan lists, with its wall time in s, its spend in USD and its caps, and a
+Total row. A script-class check gives its expected run time only, in the test
+map. An estimate is not a quota; the ask point is twice it. A requirement at
+risk gets blind project-level tests from the test-writing task; one not at
+risk gets only its builder's tests. A medium or large plan that marks no
+requirement at risk has no test-writing task: leave that entry out. A live or
+heavy test is listed only to reproduce a reported defect and confirm its fix,
+one run at base and one at the branch head, or with the reason no cheaper
+check can show the behavior.
 -->
 Risk:
 
@@ -83,15 +96,16 @@ Expensive runs:
 
 Twice the estimate, the ask point: <s> s or <USD> USD.
 
-### T<n> Project-level tests of <the requirements at risk>
+### T<n> Project-level tests of <every scenario, or the requirements at risk>
 - role: test
 - after: []
 - runs: <local|mesh>
 - needs: <environment class|any>
 - serves: [R<n>, ...]
-- done when: one test per scenario of the requirements at risk in the test
-  map, each with its cost class, expected_s, deliverables and the risk it
-  covers, each run at the base commit set, with its result in the ledger
+- done when: one test per scenario the task covers in the test map (every
+  scenario of a small change, or those of the requirements at risk), each
+  with its cost class, expected_s, deliverables and the risk it covers, each
+  run at the base commit set, with its result in the ledger
 
 ### T<n> Builder test suggestions
 - role: test
@@ -115,15 +129,18 @@ Twice the estimate, the ask point: <s> s or <USD> USD.
 
 ## 7. Review tasks
 <!--
-The plan has one review per wave of build tasks, a review of one build task
-only where its entry has `- risk: at risk`, and the whole-change review. A
-wave is a group of build tasks the dependency summary runs together, and its
-review covers those of them not reviewed alone. A plan whose build tasks form
-one wave has one review, the whole-change review. It covers every build task,
-those marked at risk included: leave out the other two entries, and the
-whole-change review comes after the build tasks and before verify. A wave
-whose build tasks are all marked at risk has no wave review: their own
-reviews cover it.
+The reviews go by the size. A small change has one review, the whole-change
+review. A medium change has one review per wave of build tasks when it has
+more than one wave, and the whole-change review. A large change has one
+review per wave of build tasks, a review of each build task marked at risk
+(its entry has `- risk: at risk`), and the whole-change review. A wave is a
+group of build tasks the dependency summary runs together, and its review
+covers those of them not reviewed alone. A plan whose build tasks form one
+wave, at any size, has one review, the whole-change review. It covers every
+build task, those marked at risk included: leave out the other two entries,
+and the whole-change review comes after the build tasks and before verify. In
+a large change, a wave whose build tasks are all marked at risk has no wave
+review: their own reviews cover it.
 -->
 ### T<n> Review of wave <w>
 - role: review
@@ -191,7 +208,8 @@ T<n> done-when, Written by T<n>, and needs no test file.
 - [ ] every planned test names the risk it covers
 - [ ] every agent- and live-class run has its wall time, spend and caps, with the totals
 - [ ] a live or heavy test is listed only to reproduce a reported defect and confirm its fix, or with the reason no cheaper check can show the behavior
-- [ ] the reviews follow section 7: one per wave, one per build task at risk, and the whole-change review
+- [ ] the reviews follow section 7 for the change's size
+- [ ] a small plan has the sections the terse plan keeps, and none it leaves out
 
 ## Questions for the spec
 <!--

@@ -202,7 +202,7 @@ its UTC, a space, and the event in this form:
 | status | the status word, then `, <repo> <sha7>..<sha7>` and `, unit <p>/<n> pass` when the line has them in that form; nothing else |
 | in words, that the task is finished, done or complete (`SKILL.md` section 1.4) | `DONE` |
 | review | `review: ` or `review r<k>: `, then `spec ok` or `spec issues`, then `; ` and its counts as `<k> <Severity>` in the order Critical, Important, Minor, joined by `, `, without file and line. Leave out each count of 0. When no count is left, or the line gives none, write `none`: `spec ok; 0 Important` gives `review: spec ok; none` |
-| fix round | `fix round <r>/5: <a> addressed, <o> open` |
+| fix round | `fix round <r>/<cap>: <a> addressed, <o> open`, with `<r>` and `<cap>` as the line gives them |
 | at base | `at base: <f> fail, <p> pass`, counting the tests the line names |
 | harness error | `harness error, attempt <k>/3` |
 | not dispatched | `not dispatched, past twice the estimate` |

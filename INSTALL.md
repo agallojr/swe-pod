@@ -44,10 +44,10 @@ commits. A space pins the process version it follows in its
 To check, list the links. A new session's `/agents` then lists the six
 `swe-*` agents.
 
-Every role runs on the most capable model available. The six role
-definitions say `model: inherit`, so each pod agent runs on the model of the
-session that starts it: start that session on the most capable model
-available, and never pick a lesser one to save cost.
+Every role, task and fix round runs on Opus, at every size, and never on a
+lesser model to save cost. The six role definitions say `model: opus`, so
+each pod agent runs on Opus whatever model the session that starts it runs
+on. The lead is your own session, which no file pins: start it on Opus.
 
 ```sh
 ls -l ~/.claude/agents/swe-*.md ~/.claude/skills/swe-pod/SKILL.md
@@ -87,7 +87,7 @@ Then replace every `<placeholder>`:
   handle, and the `visibility`.
 - `<space>/pod.yaml`: `project`, one line per code repo with its `remote` and
   its `pin` (the commit the project stands on), the merge order in `depends`,
-  and the `gates`.
+  and the `gates`, those of a large change (`PROCESS.md` §9).
 - `<space>/README.md` and `<space>/AGENTS.md`: the project's name, and one
   sentence on what it builds.
 

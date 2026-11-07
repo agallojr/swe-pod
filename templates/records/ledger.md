@@ -9,16 +9,21 @@ ledger's block starts empty. Machines appear only as environment classes. A
 refused line never quotes the text that matched. Every Ruling: line reaches
 the final report. The ask: line replaces the retired heavy: line: the lead
 asks the operator only about an expensive run the plan does not list, or one
-past twice the plan's estimate. Delete this comment in a real ledger.
+past twice the plan's estimate. In the fix-round line, <cap> is the cap of
+the change's size: 2 for small, 3 for medium or large. The size line records
+a size the operator names; plan skimmed records the operator's skim of a
+large change's plan. Delete this comment in a real ledger.
 -->
 
 ```
 <YYYY-MM-DDTHH:MMZ> spec approved by <handle>
+<YYYY-MM-DDTHH:MMZ> plan skimmed by <handle>
+<YYYY-MM-DDTHH:MMZ> size <old> -> <new> by <handle>
 <YYYY-MM-DDTHH:MMZ> go by <handle>; branches change/<id>: <repo> <sha7>[, <repo> <sha7>]
 <YYYY-MM-DDTHH:MMZ> dispatch T<n> -> <role> (<local|mesh>, <env class|any>)[, base <repo> <sha7>]
 <YYYY-MM-DDTHH:MMZ> T<n> <DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT>[, <repo> <sha7>..<sha7>][, unit <p>/<n> pass]
 <YYYY-MM-DDTHH:MMZ> T<n> review: <spec ok|spec issues>; <k> <Severity> [<repo>/<path>:<line>]
-<YYYY-MM-DDTHH:MMZ> T<n> fix round <r>/5: <a> addressed, <o> open, <sha7>..<sha7>
+<YYYY-MM-DDTHH:MMZ> T<n> fix round <r>/<cap>: <a> addressed, <o> open, <sha7>..<sha7>
 <YYYY-MM-DDTHH:MMZ> T<n> at base: <test name> <fail|pass> (<reason>)[, ...]
 <YYYY-MM-DDTHH:MMZ> T<n> returned to test: <test name> passed at base
 <YYYY-MM-DDTHH:MMZ> T<n> harness error: <test name>, attempt <k>/3, stopped at <where>
