@@ -552,7 +552,8 @@ also" is two changes. (OS)
 
 > Note (direct edit `lighten-small-and-trivial`, `swe-pod-process@4`, made on
 > the operator's word outside the pod, with no spec): a trivial size sits
-> below small, on the operator's word, with a stub plan, one test agent that
+> below small, only when the operator asks for it (the spec author never
+> suggests it), and still runs the pod: a stub plan, one test agent that
 > runs verify, and no review. Small now writes blind tests only for the
 > requirements its risk table marks at risk, has one test agent for test
 > writing and verify after the review, and its review reports no Minor

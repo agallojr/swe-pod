@@ -549,8 +549,9 @@ tasks.
 
 The change's size is its spec header's `- size:` line: trivial, small,
 medium or large, or spike (`PROCESS.md §9`). A change is small unless its
-approved spec says another size, and trivial only on the operator's
-word. The size sets the plan, the blind tests, the
+approved spec says another size, and trivial only when the operator asked
+for it. A trivial change still runs the pod: spec author, builder and test
+agent are three different agents. The size sets the plan, the blind tests, the
 reviews, the fix-round cap and the gates.
 
 - No agent changes a size, you included. An agent that sees the change

@@ -23,7 +23,9 @@ To install it and start a Project Space, see `INSTALL.md`.
 the authority; this is a summary.
 
 Every change has a size, which sets how much process it runs (`PROCESS.md`
-§9). Small is the default; trivial sits below it, on your word.
+§9). Small is the default; trivial sits below it, only when you ask for it.
+The spec author never suggests trivial, and a trivial change still runs the
+pod.
 
 - **Trivial** (a typo, a rename, a one-line fix, a doc edit): a spec of Why,
   Requirements and Open calls, a stub plan, one builder whose done-when
