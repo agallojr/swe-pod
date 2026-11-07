@@ -1,6 +1,6 @@
 # <id>: <one-sentence intent>
 
-- size: <small|medium|large|spike>
+- size: <trivial|small|medium|large|spike>
 - owner: <handle>
 - repos: [<repo>, ...]
 - supersedes: []
@@ -12,6 +12,9 @@ Record: changes/<id>/spec.md. <id> is verb-led kebab-case. Replace every
 size is the size the author suggests: small unless the change shows a sign
 for more (PROCESS.md §3 and §9). The Open calls give it with its reason in one
 line, for the human to confirm or change; only the human sets a size.
+Suggest trivial only for a one-repo change with one or two requirements whose
+fault is cheap and shows at once; a trivial spec keeps only Why, Requirements
+and Open calls.
 
 supersedes lists the qualified ids (<change>/<Rn>) of earlier requirements
 this work changes; [] when none.
@@ -64,6 +67,6 @@ The changed code SHALL <pass the check>.
 why>
 
 ## Open calls
-- Size: <small|medium|large|spike>, <the reason in one line>; confirm it or
+- Size: <trivial|small|medium|large|spike>, <the reason in one line>; confirm it or
   name another
 - <a default the author chose, which the human checks>

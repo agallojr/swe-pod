@@ -1,6 +1,6 @@
 # SWE Pod process
 
-process: swe-pod-process@3
+process: swe-pod-process@4
 
 This is the SWE Pod process, written as instructions to the agent doing the
 work. Each rule names the role it binds; where a section says "you", it means
@@ -44,7 +44,7 @@ project-level test to the Project Space.
 ```yaml
 pod: 1
 project: fvm-vqls
-process: swe-pod-process@3         # pinned PROCESS.md version
+process: swe-pod-process@4         # pinned PROCESS.md version
 repos:
   qutil: {remote: "<url>", pin: "<sha>"}
   fvm:   {remote: "<url>", pin: "<sha>"}
@@ -59,7 +59,7 @@ gates: {spec: human, plan: human-skim, merge: human}   # a large change's gates
   stands on. Pins advance only at integrate (§8).
 - `depends:` is the merge order (§8).
 - `gates:` says who passes each gate (§2). It names the gates of a large
-  change; a small or medium change has no plan skim (§9).
+  change; a trivial, small or medium change has no plan skim (§9).
 
 ### Branches
 
@@ -126,12 +126,14 @@ commit. It is what verify runs against.
   `approved:` line. Given "go" on such a change, dispatch nothing and say,
   exactly:
   `Not dispatched: the spec at changes/<id>/spec.md awaits approval.`
-- Writing the blind project-level tests is a test task that starts at the
-  go, in parallel with build, from the spec alone (§4, §6): for a small
-  change, a test for every scenario; for a medium or large change, those of
-  the requirements the plan marks at risk. Builders add to those tests only
-  by suggesting tests, which the lead routes to the test agent only when
-  they cover a risk no planned test covers (§6).
+- Writing the blind project-level tests, those of the requirements the
+  plan marks at risk, is test work from the spec alone (§4, §6). In a medium
+  or large change it is a test task that starts at the go, in parallel with
+  build. In a small change the one test task writes them after the build,
+  still blind, and then runs verify (§6, "One test task"). A trivial change
+  has none. Builders add to those tests only by suggesting tests, which the
+  lead routes to the test agent only when they cover a risk no planned test
+  covers (§6).
 - Lead: for a large change, dispatch no build or test task until the
   operator has skimmed the plan (§4, "The go").
 - Read a change's state from its records. Never set it by hand.
@@ -142,7 +144,7 @@ commit. It is what verify runs against.
 | approved | `spec.md` has `approved:` |
 | planned | `plan.md` exists with its self-review filled in |
 | building | the ledger has a dispatch |
-| verified | the latest evidence is green by the green rule (§7) at the current commit set, or for a sharded verify its shards' latest records are green together (§7), and the whole-change review has no open Critical or Important finding |
+| verified | the latest evidence is green by the green rule (§7) at the current commit set, or for a sharded verify its shards' latest records are green together (§7), and the whole-change review, where the plan has one, has no open Critical or Important finding |
 | integrated | `spec.md` has `integrated:`; the folder is under `changes/archive/` |
 | abandoned | `spec.md` has `abandoned:` with a reason |
 
@@ -174,7 +176,8 @@ Write `changes/<id>/spec.md` from `templates/records/spec.md`. The id is
 verb-led kebab-case, such as `add-vqls-backend`.
 
 - Title line: `# <id>: <the intent, in one sentence>`.
-- Header lines: `- size:` (`small`, `medium`, `large` or `spike`; "Pick
+- Header lines: `- size:` (`trivial`, `small`, `medium`, `large` or
+  `spike`; "Pick
   the size", below, and §9), `- owner: <handle>`, `- repos: [...]` (the
   code repos the change touches), and `- supersedes: []` (earlier
   requirement ids this work changes). Later lines record the change's
@@ -183,7 +186,8 @@ verb-led kebab-case, such as `add-vqls-backend`.
 - Sections, in this order: Why; Scope, with In and Out; Requirements;
   Quality; Approaches (the two or three considered, the one picked, and
   why); Open calls (the defaults you chose, which the human checks, the
-  size you suggest among them).
+  size you suggest among them). A trivial spec keeps only Why, in a
+  sentence or two, Requirements and Open calls.
 
 A requirement and its scenarios, and a quality check, look like this (values
 illustrative):
@@ -248,6 +252,9 @@ the human sets or changes it.
   A low-risk change in one repo that needs more requirements may stay small,
   with Open calls saying it is over the guide, or you may suggest medium;
   neither refuses the spec.
+- Suggest trivial only for a change to one repo with one or two
+  requirements whose fault would be cheap and would show at once, such as a
+  typo, a rename, a one-line fix or a doc edit.
 - A spike is outside the gauge (§9).
 
 ### Human review and approval
@@ -274,9 +281,10 @@ dependency graph. Write it for an engineer who has never seen the code or the
 spec. It holds the decisions they cannot make alone. A plan longer than the
 code it describes has written the code instead.
 
-- The plan's length goes by the change's size (§9). A small change's plan
-  is terse ("The terse plan", below) and a medium change's is short, with
-  its risk table; the spec author may write either. A large change's plan is
+- The plan's length goes by the change's size (§9). A trivial change's
+  plan is a stub ("The stub plan", below), a small change's is terse ("The
+  terse plan", below) and a medium change's is short; the spec author may
+  write any of them. A large change's plan is
   full, with the risk and expensive-runs tables, by a fresh planner.
 - For a large change you are a fresh agent that never saw the spec
   conversation. Your questions about the spec are the builder check: each is
@@ -322,21 +330,26 @@ code it describes has written the code instead.
    the signature and tests leave open. Each build task entry has
    `- risk: <at risk|small>: <reason>`. Build tasks run `local` for now
    (§11).
-6. **Test tasks:** first, for a medium or large change, the risk table and
-   the expensive runs ("Risk and the tests it calls for", below); then the
-   test-writing task, which writes the blind project-level tests, of every
-   scenario for a small change and of the requirements marked at risk for a
-   medium or large one (role test, `after: []`, so it starts at the go); a
-   suggestions task (role test, after every build task), which runs only
-   when the lead routes a builder's suggestion to the test agent (§6); and
+6. **Test tasks:** first, except in a trivial change, the risk table, and
+   for a medium or large change the expensive runs ("Risk and the tests it
+   calls for", below). A small or trivial change then has one test task
+   (§6, "One test task"), which also writes any suggestion tests and
+   replacements the change needs. A medium or large change has the
+   test-writing task, which writes the blind project-level tests of the
+   requirements marked at risk (role test, `after: []`, so it starts at the
+   go); a suggestions task (role test, after every build task), which runs
+   only when the lead routes a builder's suggestion to the test agent (§6); and
    the verify run (role test, after every build and test task, with `needs:`
    naming the environment class the tests require), whole or in shards, each
    shard with its own `needs:`. A spec with entries under `supersedes` also
-   gets a test task that writes their replacements in `changes/<id>/tests/`;
+   gets a test task that writes their replacements in `changes/<id>/tests/`
+   (in a small or trivial change, the one test task);
    verify gives the old tests `superseded by <key>`, and integrate moves
    them out of `tests/` (§7, §8).
-7. **Review tasks**, by the change's size (§9). A small change has one
-   review, the whole-change review. A medium change has one review per wave
+7. **Review tasks**, by the change's size (§9). A trivial change has no
+   review task: verify is its check. A small change has one review, the
+   whole-change review, which reports Critical and Important findings
+   only. A medium change has one review per wave
    of build tasks when it has more than one wave, and the whole-change
    review. A large change has one review per wave of build tasks, a review
    of each build task marked at risk, and the whole-change review. A build
@@ -366,30 +379,42 @@ code it describes has written the code instead.
 A small change's plan is terse. It keeps these sections, with the plan
 template's section numbers: 1 Goal and approach, in a sentence or two; 2
 Interface contract, only where the tests drive a public surface; 5 Tasks,
-its one build task with its done-when; 6 Test tasks, the blind-test task and
-verify, and the suggestions task and the replacements task of a spec with
-`supersedes` when the change needs them, with no risk table and no
-expensive-runs table; 7 Review tasks, the whole-change review; 8 Integrate
-task; 9 Test map, a row for every scenario; and Self-review, filled in with
-no unchecked item. It leaves out 3 Global constraints, 4 File map, 10
+its one build task with its done-when; 6 Test tasks, the risk table, one
+row per requirement, and the one test task, with no expensive-runs table;
+7 Review tasks, the whole-change review; 8 Integrate task; 9 Test map, a
+row for every scenario; and Self-review, filled in with no unchecked
+item. It leaves out 3 Global constraints, 4 File map, 10
 Dependency summary and Questions for the spec. The operator does not skim
 it. The `swe-pod` skill reads it by the rules every plan shares: it is
 planned once its Self-review is filled in, its tasks are its entries in
 sections 5 to 8, and its test map is section 9.
+
+### The stub plan
+
+A trivial change's plan is a stub, written by the spec author. It keeps: 1
+Goal and approach, in one sentence; 5 Tasks, its one build task, whose
+done-when checks every scenario; 6 Test tasks, the one test task, which
+runs verify only; 8 Integrate task; 9 Test map, a row for every scenario,
+each `T<n> done-when` or a unit test the build task writes; and
+Self-review. It has no risk table, no review task and no other section. The
+operator does not skim it, and the `swe-pod` skill reads it by the rules
+every plan shares.
 
 ### Risk and the tests it calls for
 
 Every test the plan lists names the risk it covers, and the plan lists no
 test without one.
 
-- **Risk table.** In a medium or large change's plan, section 6 opens with
-  a risk table, one row per requirement. The plan marks each requirement
-  `at risk` or `small`, with its reason, where the human sees it: at the
-  skim for a large change, and in the plan itself for a medium one. A
+- **Risk table.** In every plan but a trivial change's, section 6 opens
+  with a risk table, one row per requirement. The plan marks each
+  requirement `at risk` or `small`, with its reason, where the human sees
+  it: at the skim for a large change, and in the plan itself for a small or
+  medium one. A
   requirement is at risk when a fault in it would be costly or would show
   only late, such as a fix for a reported defect seen only in a live
   session, or a rule that decides whether a change is verified; otherwise
-  it is small. A small change's plan has no risk table.
+  it is small. A trivial change's plan has no risk table: it has no blind
+  tests.
 
   ```
   | Requirement | Risk | Reason |
@@ -397,28 +422,29 @@ test without one.
   | R<n> | <at risk|small> | <the reason> |
   ```
 
-- **Independent tests.** For a small change, a test agent writes a blind
-  test for every scenario, from the spec alone; for a medium or large
-  change, the plan's risk table picks the requirements that get blind
-  tests. At every size, a test agent runs verify. In a medium or large
-  change, a requirement the plan marks at risk gets blind project-level
-  tests, written by a test agent that never saw the build; a requirement
-  not at risk gets none beyond its builder's tests, which the review checks
-  against its scenarios. A part of the change with small risk gets no test
+- **Independent tests.** The plan's risk table picks the requirements
+  that get blind tests; a trivial change has none. At every size, a test
+  agent runs verify. A requirement the plan marks at risk gets blind
+  project-level tests, written by a test agent that never read the build; a
+  requirement not at risk gets none beyond its builder's tests, which the
+  review checks against its scenarios, and which verify reruns. A part of the
+  change with small risk gets no test
   beyond its builder's own and the repo's unit suite, unless the plan names
   a further risk that test covers. A test planned for a requirement at risk
   names the part of that risk it covers. A builder's test is a unit test
   or, in a repo with no unit suite, a check in the build task's done-when.
-  A medium or large plan that marks no requirement at risk has no
-  test-writing task.
+  A plan that marks no requirement at risk has no blind tests: a medium or
+  large one has no test-writing task, and a small one's test task runs
+  verify only.
 - **Expensive runs.** The plan gives each agent-class or live-class run it
   lists its wall time in s, its spend in USD and the caps the budget policy
   asks for, with the totals of those estimates; a script-class check gives
   its expected run time only. Cost classes are those of §7. An estimate is
   not a quota. The lead asks the operator only about an agent-class or
   live-class run the plan does not list, or one past twice the estimate
-  (§11). A small change's plan has no expensive-runs table, so the lead
-  asks before any agent-class or live-class run it makes. A medium or large
+  (§11). A trivial or small change's plan has no expensive-runs table, so
+  the lead asks before any agent-class or live-class run it makes. A medium or
+  large
   change's section 6 gives every agent-class or live-class run the plan
   lists in this table, with a Total row:
 
@@ -462,7 +488,8 @@ test without one.
 - Build shards run `local`, like every build task, for now (§11).
 
 Then come the plan's last two sections, `Self-review` and `Questions for the
-spec`; a terse plan has the first only. Sort each question as (a) answered,
+spec`; a terse or stub plan has the first only. Sort each question as (a)
+answered,
 (b) minor, with the default planned, or (c) for the human.
 
 ### Self-review
@@ -474,8 +501,9 @@ and done-when; every planned test names the risk it covers; every agent- and
 live-class run has its wall time, spend and caps, with the totals; a live or
 heavy test is listed only to reproduce a reported defect and confirm its
 fix, or with the reason no cheaper check can show the behavior; the reviews
-follow item 7 for the change's size; a terse plan has the sections "The
-terse plan" keeps and none it leaves out. An item that does not apply is
+follow item 7 for the change's size; a terse or stub plan has the sections
+"The terse plan" or "The stub plan" keeps and no other. An item that does not
+apply is
 checked and says why, such as `: there is none`. The self-review fails on
 any planned test that names no risk. Fill in the self-review section with
 the result.
@@ -491,17 +519,18 @@ large change whose ledger has no `plan skimmed by <handle>` line, dispatch
 nothing and say, exactly:
 `Not dispatched: the plan at changes/<id>/plan.md awaits the operator's skim.`
 
-For a small or medium change, approving the spec is the go, with no plan
-skim.
+For a trivial, small or medium change, approving the spec is the go, with
+no plan skim.
 
 ## 5 Build
 
 **Lead.** For each build task, write a brief from
 `templates/records/brief.md` at `changes/<id>/tasks/T<n>-brief.md`, dispatch
 a fresh builder (§11), and record the base commit in the dispatch line. The
-brief holds the plan entry verbatim, the interfaces it touches, the global
-constraints, any ruling that bears on it, the commit set to start from, by
-sha, and where the result goes.
+brief holds the plan entry verbatim, the text of the requirements and
+scenarios the task serves, copied from the spec, the interfaces it touches,
+the global constraints, any ruling that bears on it, the commit set to start
+from, by sha, and where the result goes. It is self-contained (§11).
 
 **Builder.** You work from your brief.
 
@@ -542,8 +571,10 @@ A report is a claim; output and diffs are evidence. Record the result as:
 T<n> <DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT>[, <repo> <sha7>..<sha7>][, unit <p>/<n> pass]
 ```
 
-**Reviews.** The reviews go by the change's size (§4, §9). A small change
-has one review, the whole-change review. A medium change has one review per
+**Reviews.** The reviews go by the change's size (§4, §9). A trivial
+change has no review: verify is its check. A small change has one review,
+the whole-change review, which reports Critical and Important findings
+only. A medium change has one review per
 wave of build tasks when it has more than one wave, and the whole-change
 review. A large change has one review per wave of build tasks, a review of
 each build task marked at risk, and the whole-change review. Dispatch a
@@ -565,21 +596,27 @@ under your review's own task number.
 
 - Return spec compliance (missing, extra, misread) and quality (structure,
   error handling, whether the tests check real behavior).
-- In a medium or large change, for each scenario of a requirement not at
-  risk, the review checks that its builder's test exercises it, and records
-  an Important finding where one does not.
+- For each scenario of a requirement not at risk, the review checks that
+  its builder's test exercises it, and records an Important finding where
+  one does not.
 - Mark each finding Critical, Important or Minor, with file and line:
-  `- <Critical|Important|Minor> <repo>/<path>:<line> <text>`.
+  `- <Critical|Important|Minor> <repo>/<path>:<line> <text>`. In a small
+  change, report Critical and Important findings only and leave out
+  anything Minor: a small change fixes no Minor finding, so reporting one
+  costs a ruling and buys nothing.
 - Trust the diff over the report. Change nothing you review.
 
 **Fix loop.** Only Critical and Important findings start a fix round, and a
 fix round carries only those. Minor findings never start one: they are fixed
 in the whole-change fix wave or parked by a ruling, and listed in the final
-report (§7, §8). A task gets at most its size's cap of fix rounds: 2 for a
-small change, 3 for a medium or large one (§9).
+report (§7, §8); a small change's review reports none. In a trivial change,
+which has no review, findings come only from verify failures. A task gets at
+most its size's cap of fix rounds: 2 for a
+trivial or small change, 3 for a medium or large one (§9).
 
 - Every round goes to the same builder, and ends with a review of the fix
-  diff only.
+  diff only. In a trivial change, and for a fix routed from a verify
+  failure in a small one, the round ends with verify run again instead.
 - Lead: record each round as
   `T<n> fix round <r>/<cap>: <a> addressed, <o> open, <sha7>..<sha7>`, with
   `<cap>` the cap of the change's size.
@@ -605,10 +642,10 @@ agents comes from a fresh session or another node (§10).
 ## 6 Project-level tests
 
 You are the test agent writing the change's blind project-level tests (§4,
-§9). For a small change, a test agent writes a blind test for every
-scenario, from the spec alone; for a medium or large change, the plan's risk
-table picks the requirements that get blind tests. At every size, a test
-agent runs verify (§7), and it is neither the spec author nor a builder.
+§9). The plan's risk table picks the requirements that get blind tests; a
+trivial change has none. At every size, a test agent runs verify (§7), and
+it is neither the spec author nor a builder. In a small or trivial change
+one test agent does all of it, in one task ("One test task", below).
 Write the tests from the spec, the interface contract, the global
 constraints and the test map. Do not read implementation bodies, diffs,
 builder reports or build-task steps. Once code exists you may use its
@@ -620,9 +657,9 @@ spec's path, and the interface contract, global constraints and test map
 copied from the plan, with the commit sets to start from, and under its
 global constraints the plan's rows for the expensive runs the task makes. A
 terse plan has no global constraints section, so the brief's says
-`none in the plan; the spec is the source`. Its task entry covers every
-scenario of a small change, or the scenarios of the requirements the plan
-marks at risk of a medium or large one, and no others. It never holds an
+`none in the plan; the spec is the source`. Its task entry covers the
+scenarios of the requirements the plan marks at risk, and no others. It never
+holds an
 implementation body, a diff, a builder report or a build-task step.
 
 **Test agent:**
@@ -652,6 +689,27 @@ each result as `T<n> at base: <test name> <fail|pass> (<reason>)[, ...]`.
 Lead: if such a test passes at base, return it to the test agent and record
 `T<n> returned to test: <test name> passed at base`. A run that ends as a
 harness error is no result at base; it follows the harness-error rule (§7).
+
+### One test task
+
+A small or trivial change has one test task, and so one test agent, for all
+its test work. It runs after the build task and, in a small change, after
+the whole-change review closes, so verify runs once at the reviewed code.
+Its brief is the test-writing brief, and its `## Task` lists, in order:
+
+1. the blind tests to write, of the requirements the plan marks at risk;
+2. the builders' suggestions the lead routed to it (§6, below), each with
+   its "for the tester" part only, and the replacements of a spec with
+   `supersedes`;
+3. verify, at the commit set under test (§7).
+
+It writes steps 1 and 2 blind, by the rule above: it reads no implementation
+body, diff, builder report or build-task step, though the build exists. It
+runs each new test at the base commit set and records each result there,
+then runs verify and writes the evidence. With nothing to write in steps 1
+and 2, as in every trivial change, the task runs verify only. A verify that
+runs again after a fix is a new dispatch of the same task, in verify mode
+only.
 
 ### Test suggestions from builders
 
@@ -876,16 +934,17 @@ below). It reviews the whole change: the spec, the plan, every repo's diff,
 the latest evidence when there is one, and the ledger's deferred minors and
 rulings. It checks completeness (every requirement has code and a test that
 covers it), correctness (the code does what the spec means, edge cases
-included) and coherence (the plan's decisions show in the code), and, in a
-medium or large change, that each builder's test of a requirement not at
-risk exercises its scenario (§5). It uses the review format of §5, under its
+included) and coherence (the plan's decisions show in the code), and that
+each builder's test of a requirement not at risk exercises its scenario
+(§5). A trivial change has no whole-change review. It uses the review format of
+§5, under its
 own task number.
 
 For a small change, the whole-change review is its one review, and its
-findings run the fix loop of §5: only Critical and Important findings start
-a fix round, every round goes to the same builder, and the cap is 2 rounds.
-Its Minor findings are parked by one ruling and listed in the final report;
-no fix wave batches them. For a medium or large change, the whole-change fix
+findings run the fix loop of §5: it reports only Critical and Important
+findings, each starts a fix round, every round goes to the same builder,
+and the cap is 2 rounds. It reports no Minor finding, so none is parked and
+no fix wave runs. For a medium or large change, the whole-change fix
 wave runs only when the whole-change review has a Critical or Important
 finding, and then also takes the batched Minor findings; with none, they are
 parked by one ruling and listed in the final report. The fix wave goes to
@@ -893,7 +952,8 @@ one builder, then one re-review, and its rounds count toward the cap of 3.
 At either cap the lead rules on each open finding in a line that begins
 `Ruling: T<n> open findings`. In a plan whose build tasks form one wave, a
 fix that lands after the whole-change review, such as one routed from a
-verify failure, gets a review of its fix diff only.
+verify failure, gets a review of its fix diff only; in a small change it
+gets none, and verify running again is its check.
 
 ### Sharded verify
 
@@ -1014,17 +1074,21 @@ small, medium and large are one gauge, with small the default; a spike is
 outside it. Every size starts with a spec, and the size is picked when the
 spec is written (§3):
 
-| Size | When | Spec | Plan | Blind tests | Reviews | Fix rounds | Human gates |
-|---|---|---|---|---|---|---|---|
-| small (default) | one intent, about 3 requirements, one repo, low risk | short | terse; the spec author may write it | every scenario | the whole-change review | 2 | spec approval (also the go), merge |
-| medium | several requirements, or one repo with moderate risk | full | short, with the risk table; the spec author may write it | requirements the plan marks at risk | one per wave when there is more than one wave, and the whole-change review | 3 | spec approval (also the go), merge |
-| large | several repos, an interface or data-format change, anything costly to get wrong | full | full, by a fresh planner, with the risk and expensive-runs tables | requirements the plan marks at risk | one per wave, one per build task marked at risk, and the whole-change review | 3 | spec approval, plan skim, merge |
-| spike | building something throwaway is the fastest way to learn | the question and what would answer it | none | none | none | none | none |
+| Size | When | Spec | Plan | Blind tests | Test agents | Reviews | Fix rounds | Human gates |
+|---|---|---|---|---|---|---|---|---|
+| trivial (on the operator's word) | one repo, one or two requirements, a fault cheap and seen at once: a typo, a rename, a one-line fix, a doc edit | Why, Requirements, Open calls | stub, by the spec author | none | one, verify only | none | 2 | spec approval (also the go), merge |
+| small (default) | one intent, about 3 requirements, one repo, low risk | short | terse, with the risk table; the spec author may write it | requirements the plan marks at risk | one, which writes them and runs verify | the whole-change review, Critical and Important findings only | 2 | spec approval (also the go), merge |
+| medium | several requirements, or one repo with moderate risk | full | short, with the risk table; the spec author may write it | requirements the plan marks at risk | a test-writing task, verify, and a suggestions task when one is routed | one per wave when there is more than one wave, and the whole-change review | 3 | spec approval (also the go), merge |
+| large | several repos, an interface or data-format change, anything costly to get wrong | full | full, by a fresh planner, with the risk and expensive-runs tables | requirements the plan marks at risk | as medium | one per wave, one per build task marked at risk, and the whole-change review | 3 | spec approval, plan skim, merge |
+| spike | building something throwaway is the fastest way to learn | the question and what would answer it | none | none | none | none | none | none |
 
-The plan is terse, short or full as §4 says; the fix rounds are the cap per
+The plan is a stub, terse, short or full as §4 says; the fix rounds are the cap
+per
 task (§5).
 
-- A change is small unless its approved spec says another size. The spec
+- A change is small unless its approved spec says another size. Trivial
+  is below the default: the spec author may suggest it, and a change is
+  trivial only when the operator confirms it. The spec
   author states the size it suggests and the reason in Open calls and asks
   the operator to confirm or name another (§3). The signs to suggest more
   than small: more than one repo, an interface or data-format change, well
@@ -1039,11 +1103,12 @@ task (§5).
   made from there, work already done stands, and the ledger records
   `size <old> -> <new> by <handle>`. Stepping down drops the steps not yet
   made and keeps filed records.
-- Legacy names: an archived spec's `size: small` reads as medium and
-  `size: project` as large; archived files are not edited.
+- Legacy names: a spec archived before `swe-pod-process@3` reads
+  `size: small` as medium and `size: project` as large; archived files are
+  not edited.
 - Every size of the gauge keeps an approved spec before any build or test
-  task, and four different fresh agents: spec author, builder, test agent,
-  reviewer (§10).
+  task, and three different fresh agents: spec author, builder and test
+  agent. Every size but trivial adds a fourth, the reviewer (§10).
 - A spike has one build agent, no review, and never merges. Its output is a
   write-up in `notes/`. Keeping anything it produced is a new change with
   its own spec.
@@ -1064,11 +1129,12 @@ Each pod role is held by an agent, local or on the mesh, where the role is
 | **test** | project-level tests, evidence | writes code or the spec; reads implementation bodies, diffs or builder reports while writing tests |
 | **review** | review records | changes what it reviews; trusts a report over the diff |
 
-**Independence.** At every size of the gauge, the spec author, the builder,
-the test agent and the reviewer are four different fresh agents, so the test
-agent is never the one that wrote the spec or the code. For a large change
-the planner is a different agent from the spec author too; for a small or
-medium change the spec author may write the plan. A different agent means at
+**Independence.** At every size of the gauge, the spec author, the builder
+and the test agent are three different fresh agents, so the test agent is
+never the one that wrote the spec or the code; the reviewer, at every size
+but trivial, is a fourth. For a large change the planner is a different
+agent from the spec author too; for a trivial, small or medium change the
+spec author may write the plan. A different agent means at
 least a fresh context started from a brief or the operator's request, never
 another agent's session. Independence between agents comes from a fresh
 session or another node. Every role runs on Opus (§5). One node may hold
@@ -1091,8 +1157,9 @@ runs local.
 planner, lead and the space's librarian, and dispatches fresh local
 subagents for build, test and review. For a large change it plans through a
 fresh local subagent too, since a large change's spec and plan must be
-different agents; for a small or medium change it may write the plan itself,
-as spec author. Without a mesh, file every record through agent-mesh's
+different agents; for a trivial, small or medium change it may write the
+plan itself, as spec author. Without a mesh, file every record through
+agent-mesh's
 `space-librarian` skill. It applies the same profile, reference and id
 checks a mesh librarian applies (§12) and makes the commit. That needs the
 Agent Mesh product's code, but no bus, core, lore or remote agent. The
@@ -1107,6 +1174,16 @@ holds the task text, the interfaces it touches, the global constraints, any
 ruling that bears on it, the commit set to start from, and where the result
 goes. Machine paths never go in a brief. Each role's definition is
 `agents/swe-<role>.md` in the swe-pod product.
+
+- **Self-contained briefs.** Every agent reads its context fresh, so what it
+  reads is paid for on every dispatch. A brief quotes what its task needs:
+  the plan entry, the requirements and scenarios it serves, the interfaces,
+  constraints and rulings. A role definition carries its role's part of
+  this file. So an agent reads its brief, its role definition and the code
+  it works on, and opens the spec, the plan or this file only for a
+  question the brief leaves open, and then only the section it needs; no
+  agent reads this file whole. The lead, the operator's own session, is the
+  one reader of this file.
 
 - **`runs: local`.** Start a fresh subagent on your own node, of type
   `swe-<role>`. Its prompt holds the brief's space-relative path and, on its

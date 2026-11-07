@@ -7,9 +7,11 @@ agents, local or remote, with or without an Agent Mesh.
 - Depends on: `agallojr/agent-mesh`, for its librarian
 - Development: project `proj:swe-pod`, Project Space `agallojr/swe-pod-space`
 
-Status: version 3 (`swe-pod-process@3`): the process, the six role
+Status: version 4 (`swe-pod-process@4`): the process, the six role
 definitions, the Project Space and record templates, and the `swe-pod` skill.
-Version 3 adds the size gauge, small by default (change `add-size-gauge`);
+Version 4 adds the trivial size and lightens small (one test agent, blind
+tests only where at risk, no Minor findings) and trims what agents read;
+version 3 added the size gauge, small by default (change `add-size-gauge`);
 version 2 sized testing to risk (change `right-size-testing`). First use was
 the pilot (`SPEC.md` §16).
 
@@ -21,17 +23,27 @@ To install it and start a Project Space, see `INSTALL.md`.
 the authority; this is a summary.
 
 Every change has a size, which sets how much process it runs (`PROCESS.md`
-§9). A change is small unless its approved spec says another size: a small
-change has about 3 requirements and one repo (a guide, not a cap), a terse
-plan, a blind test for every scenario, one review and at most 2 fix rounds
-per task. A medium change has a short plan with its risk table, one review
-per wave of build tasks when it has more than one wave, and the whole-change
-review. A large change has the full plan by a fresh planner, which you skim
-before the go, and the full set of reviews. Medium and large allow 3 fix
-rounds per task. The spec author suggests a size with its reason; only you
-set or change it, and an agent that sees a change outgrow its size says so
-in one line. Every size of the gauge keeps an approved spec and four
-different fresh agents: spec author, builder, test agent and reviewer.
+§9). Small is the default; trivial sits below it, on your word.
+
+- **Trivial** (a typo, a rename, a one-line fix, a doc edit): a spec of Why,
+  Requirements and Open calls, a stub plan, one builder whose done-when
+  checks every scenario, and one test agent that runs verify. No review.
+- **Small** (about 3 requirements, one repo; a guide, not a cap): a terse
+  plan with a short risk table, one builder, one whole-change review that
+  reports Critical and Important findings only, and one test agent that
+  writes blind tests for the requirements marked at risk (often none) and
+  then runs verify.
+- **Medium**: a short plan, a review per wave when there is more than one,
+  the whole-change review, and separate test-writing and verify tasks.
+- **Large**: the full plan by a fresh planner, which you skim before the go,
+  and the full set of reviews.
+
+Trivial and small allow 2 fix rounds per task, medium and large 3. The spec
+author suggests a size with its reason; only you set or change it, and an
+agent that sees a change outgrow its size says so in one line. Every size
+keeps an approved spec and three different fresh agents (spec author,
+builder, test agent); every size but trivial adds a reviewer. Briefs quote
+what each task needs, so agents do not read `PROCESS.md` whole.
 
 A change runs five stages:
 
@@ -40,32 +52,32 @@ A change runs five stages:
    scenario. You approve it. Nothing is planned, built or tested before that.
 2. **Plan.** The plan maps every requirement to a build task and every
    scenario to a test, and gives each task its dependencies; the spec author
-   may write it for a small or medium change, and a fresh planner writes it
-   for a large one. Every test the plan lists names the risk it covers, and
-   the plan lists no test without one. For a small change, a test agent writes
-   a blind test for every scenario, from the spec alone; for a medium or large
-   change, the plan's risk table picks the requirements that get blind tests.
-   At every size, a test agent runs verify. In a medium or large change, a
-   requirement not at risk gets no test beyond its builder's tests, which the
+   may write it for a trivial, small or medium change, and a fresh planner
+   writes it for a large one. Every test the plan lists names the risk it
+   covers, and the plan lists no test without one. The plan's risk table
+   picks the requirements that get blind tests; a trivial change has none.
+   At every size, a test agent runs verify. A requirement not at risk gets no test beyond its builder's tests, which the
    review checks against its scenarios. The plan estimates the wall time in s
    and spend in USD of its agent-class and live-class runs, and lists a live
    test only to reproduce and confirm a reported defect or where nothing
    cheaper can show the behavior. Tasks with no dependency between them run in
-   parallel. For a large change you skim the plan; for a small or medium one,
-   approving the spec is the go.
+   parallel. For a large change you skim the plan; for any other, approving
+   the spec is the go.
 3. **Build.** At your go, the lead creates one branch, `change/<id>`, in each
    code repo the spec names. Builders commit code, unit tests and shipped docs
-   to it, test first. A small change has one review, the whole-change
-   review. A medium change has one review per wave of build tasks when it
-   has more than one wave, and the whole-change review. A large change has
-   one review per wave of build tasks, a review of each build task marked at
-   risk, and the whole-change review. Only Critical and Important findings
-   start a fix round, every round goes to the same builder, and a task gets
-   at most 2 rounds for a small change and 3 for a medium or large one; at
+   to it, test first. A trivial change has no review. A small change has one
+   review, the whole-change review, Critical and Important findings only. A
+   medium change has one review per wave of build tasks when it has more
+   than one wave, and the whole-change review. A large change has one review
+   per wave of build tasks, a review of each build task marked at risk, and
+   the whole-change review. Only Critical and Important findings start a fix
+   round, every round goes to the same builder, and a task gets at most 2
+   rounds for a trivial or small change and 3 for a medium or large one; at
    the cap the lead rules, and goes back to the spec where a requirement was
    read two ways. Minor findings never start a fix round and are listed in
-   the final report. In parallel, a test agent writes the blind tests, from
-   the spec alone.
+   the final report. A test agent writes the blind tests from the spec
+   alone: in parallel for a medium or large change, and after the review, in
+   the same task as verify, for a small one.
 4. **Verify.** A test agent runs the change's own tests, every unit suite,
    every declared quality check and the regression tests the change could
    break, at one commit set, and writes the evidence: a script-class
@@ -154,8 +166,8 @@ Claude Code session, opened in the Project Space's checkout, is the spec
 author, planner, lead and the space's librarian. It starts a fresh local
 subagent for each build, test and review task, from that task's brief. For a
 large change it plans through a fresh local subagent too, since a large
-change's spec and plan must be different agents; for a small or medium change
-it may write the plan itself, as spec author.
+change's spec and plan must be different agents; for a trivial, small or
+medium change it may write the plan itself, as spec author.
 
 When no mesh is present, the pod depends on agent-mesh's `space-librarian`
 skill. The session files every record into the space through it, with the
@@ -168,8 +180,8 @@ A session goes like this. The words are examples, not syntax.
 1. Say what you want: "I want the nozzle solver to take a VQLS backend". The
    spec author plays it back, asks the one question that matters most, and
    drafts the spec.
-2. Say "approved". For a small or medium change that is the go; for a large
-   change, skim the plan, say so, then say "go". The lead creates the
+2. Say "approved". For a trivial, small or medium change that is the go; for
+   a large change, skim the plan, say so, then say "go". The lead creates the
    branches and dispatches every task whose dependencies are done.
 3. Ask "where are we?" at any time, and the `swe-pod` skill answers from the
    records. Ask it to regenerate the status view, `<space>/STATUS.md`, when

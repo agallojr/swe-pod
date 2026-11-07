@@ -1,7 +1,7 @@
 # <id>: plan
 
 - change: <id>; spec approved <YYYY-MM-DDTHH:MMZ>
-- size: <small|medium|large>
+- size: <trivial|small|medium|large>
 - planner: <handle>/plan
 - base commit set: {space: <sha7>, <repo>: <sha7>, ...}
 - code branches: change/<id> in <repo>[, <repo>]
@@ -16,12 +16,16 @@ comments.
 The plan's length goes by the size (PROCESS.md §4 and §9). A medium or large
 plan has every section below; a large one is written by a fresh planner. A
 small plan is terse: keep sections 1, 2 (only where the tests drive a public
-surface), 5 (its one build task), 6 (the blind-test task and verify, and the
-suggestions task and the replacements task of a spec with supersedes when the
-change needs them, with no risk table and no expensive-runs table), 7 (the
-whole-change review), 8, 9 (a row for every scenario) and Self-review, with
+surface), 5 (its one build task), 6 (the risk table and the one test task,
+with no expensive-runs table), 7 (the whole-change review, Critical and
+Important findings only), 8, 9 (a row for every scenario) and Self-review, with
 their numbers, and leave out 3 Global constraints, 4 File map, 10 Dependency
 summary and Questions for the spec.
+
+A trivial plan is a stub, by the spec author: keep sections 1 (one
+sentence), 5 (its one build task, whose done-when checks every scenario), 6
+(the one test task, verify only), 8, 9 and Self-review, and nothing else: no
+risk table and no review task.
 -->
 
 ## 1. Goal and approach
@@ -67,12 +71,15 @@ or, in a repo with no unit suite, a check in the build task's done-when.
 ## 6. Test tasks
 <!--
 Every test the plan lists names the risk it covers, and the plan lists no
-test without one. For a small change, a test agent writes a blind test for
-every scenario, from the spec alone; for a medium or large change, the plan's
-risk table picks the requirements that get blind tests. At every size, a test
-agent runs verify. A small plan has no risk table and no expensive-runs table:
-leave both out. A medium or large plan first has the risk table, one row per
-requirement; then the expensive runs: every agent-class or live-class run the
+test without one. The plan's risk table picks the requirements that get blind
+tests; a trivial plan has none and no risk table. At every size, a test agent
+runs verify. A small or trivial plan has one test task, after the build task
+and (small) the whole-change review: it writes the blind tests of the
+requirements at risk, any routed suggestions and replacements, then runs
+verify (PROCESS.md §6, One test task); keep the One test task entry below and
+leave out the other test entries and the expensive-runs table. A small,
+medium or large plan first has the risk table, one row per requirement; a
+medium or large plan then has the expensive runs: every agent-class or live-class run the
 plan lists, with its wall time in s, its spend in USD and its caps, and a
 Total row. A script-class check gives its expected run time only, in the test
 map. An estimate is not a quota; the ask point is twice it. A requirement at
@@ -98,16 +105,27 @@ Expensive runs:
 
 Twice the estimate, the ask point: <s> s or <USD> USD.
 
-### T<n> Project-level tests of <every scenario, or the requirements at risk>
+### T<n> Project-level tests of the requirements at risk (medium or large)
 - role: test
 - after: []
 - runs: <local|mesh>
 - needs: <environment class|any>
 - serves: [R<n>, ...]
-- done when: one test per scenario the task covers in the test map (every
-  scenario of a small change, or those of the requirements at risk), each
+- done when: one test per scenario the task covers in the test map (those
+  of the requirements at risk), each
   with its cost class, expected_s, deliverables and the risk it covers, each
   run at the base commit set, with its result in the ledger
+
+### T<n> One test task (small or trivial only)
+- role: test
+- after: [<the build task>, <the whole-change review, in a small change>]
+- runs: <local|mesh>
+- needs: <the environment class the tests require>
+- serves: [R<n>, ...]
+- done when: the blind tests of the requirements at risk (none in a trivial
+  change), any routed suggestions and replacements, each run at the base
+  commit set with its result in the ledger; then an evidence record as the
+  verify entry below gives it
 
 ### T<n> Builder test suggestions
 - role: test
@@ -131,8 +149,9 @@ Twice the estimate, the ask point: <s> s or <USD> USD.
 
 ## 7. Review tasks
 <!--
-The reviews go by the size. A small change has one review, the whole-change
-review. A medium change has one review per wave of build tasks when it has
+The reviews go by the size. A trivial change has none: leave this section's
+entries out. A small change has one review, the whole-change review, which
+reports Critical and Important findings only. A medium change has one review per wave of build tasks when it has
 more than one wave, and the whole-change review. A large change has one
 review per wave of build tasks, a review of each build task marked at risk
 (its entry has `- risk: at risk`), and the whole-change review. A wave is a
@@ -211,7 +230,7 @@ T<n> done-when, Written by T<n>, and needs no test file.
 - [ ] every agent- and live-class run has its wall time, spend and caps, with the totals
 - [ ] a live or heavy test is listed only to reproduce a reported defect and confirm its fix, or with the reason no cheaper check can show the behavior
 - [ ] the reviews follow section 7 for the change's size
-- [ ] a small plan has the sections the terse plan keeps, and none it leaves out
+- [ ] a small or trivial plan has the sections the terse or stub plan keeps, and no other
 
 ## Questions for the spec
 <!--

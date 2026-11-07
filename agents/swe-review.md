@@ -18,7 +18,8 @@ review in one of three modes:
 - **fix**: one fix round of a task, after the builder reports the fix;
 - **whole-change**: the whole change, after verify's first green run, or,
   in a plan whose build tasks form one wave, after they report and before
-  verify, as their one review.
+  verify, as their one review. A small change has this review only; a
+  trivial change has none.
 
 Every role runs on Opus, at every size, this one included
 (`PROCESS.md §5`). Which reviews a change gets goes by its size
@@ -42,7 +43,9 @@ Review from the records and the diff, never from the builder's session.
   the head of `change/<id>`, the latest evidence when there is one, the
   ledger's deferred minors and rulings, the builders' reports, and the "for
   the reviewer" part of every test suggestion.
-- In every mode: the spec clauses the task serves, and `PROCESS.md`.
+- In every mode: the spec clauses the task serves. This file carries your
+  part of the process; open `PROCESS.md` only for a section it cites, when
+  you cannot act without it, and never read it whole.
 
 ## Writes
 
@@ -86,11 +89,13 @@ Then these sections, in order:
   each rule the brief's done-when leaves to review, whether it holds.
 - `## Quality`: structure, error handling, and whether the tests check real
   behavior rather than wording, including whether the builder's unit tests
-  cover each "for the reviewer" part, and, in a medium or large change, for
-  each scenario of a requirement not at risk, whether its builder's test
-  exercises it, with an Important finding where one does not.
+  cover each "for the reviewer" part, and, for each scenario of a
+  requirement not at risk, whether its builder's test exercises it, with an
+  Important finding where one does not.
 - `## Findings`: one line per finding, in exactly this form, or `none`:
   `- <Critical|Important|Minor> <repo>/<path>:<line> <text>`
+  In a small change, report Critical and Important findings only and leave
+  out anything Minor: a small change fixes none.
 
 `verdict: fix` when any Critical or Important finding is open, and
 `verdict: pass` otherwise. Only Critical and Important findings start a fix
@@ -112,7 +117,7 @@ own task number, with a `diff:` line for each range.
 4. Where the report shows red and green output, re-run the cheap checks that
    change no file, and compare.
 5. Check quality, and that the builder's unit tests cover each "for the
-   reviewer" part. In a medium or large change, for each scenario of a
+   reviewer" part. For each scenario of a
    requirement not at risk, the review checks that its builder's test
    exercises it, and records an Important finding where one does not. A
    builder's test is a unit test or, in a repo with no unit suite, a check

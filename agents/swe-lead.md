@@ -113,8 +113,8 @@ filing", below). You never commit to the space yourself.
 1. When the human approves the spec, the spec author records `approved:`.
    Record `spec approved by <handle>`. The change's size is the spec
    header's `- size:` line, and a spec with none is small ("Size", below).
-   For a small or medium change, that approval is the go, with no plan
-   skim: once `plan.md` is planned, by the spec author or a planner, go on
+   For a trivial, small or medium change, that approval is the go, with no
+   plan skim: once `plan.md` is planned, by the spec author or a planner, go on
    to step 3. For a large change, dispatch the plan task to a fresh planner
    that never saw the spec conversation, and wait for the operator's skim of
    `plan.md`. When the operator says the plan is skimmed, record
@@ -165,7 +165,9 @@ drive this yourself. For each ready task:
 
 1. Write its brief, `changes/<id>/tasks/T<n>-brief.md`, from the template in
    `templates/records/`, with the sections `## Task` (the plan entry,
-   verbatim), `## Interfaces`, `## Global constraints`, `## Rulings` (every
+   verbatim), `## Requirements` (the text of each requirement and scenario
+   the task serves, copied from the spec), `## Interfaces`, `## Global
+   constraints`, `## Rulings` (every
    ruling that bears on the task), `## Start from` (the commit set, by sha)
    and `## Result goes to`.
 2. For a task that writes project-level tests, use the test-writing brief
@@ -178,9 +180,13 @@ drive this yourself. For each ready task:
    suggestions task only: the "for the tester" parts, each naming the risk
    it covers) and `## Result goes to`. A terse plan has no global
    constraints section, so the brief's says
-   `none in the plan; the spec is the source`. Its task entry covers every
-   scenario of a small change, or the scenarios of the requirements the plan
-   marks at risk of a medium or large one, and no others. It holds no
+   `none in the plan; the spec is the source`. Its task entry covers the
+   scenarios of the requirements the plan marks at risk, and no others. The
+   one test task of a small or trivial change (`PROCESS.md §6`, "One test
+   task") uses this brief too: its `## Task` lists the blind tests to
+   write, the routed suggestions under `## Suggestions` and the
+   replacements, then verify with its commit set and environment class.
+   With nothing to write, it is a verify-only brief. It holds no
    implementation body, diff, builder report or build-task step, and it
    ends with this line, exactly:
 
@@ -367,8 +373,10 @@ and fixes the test or keeps it with a reason. Until then the test stands
 unchanged.
 
 **Reviews and the fix loop.** The reviews go by the change's size
-(`PROCESS.md §5`, §9). A small change has one review, the whole-change
-review. A medium change has one review per wave of build tasks when it has
+(`PROCESS.md §5`, §9). A trivial change has no review: verify is its check.
+A small change has one review, the whole-change review, which reports
+Critical and Important findings only; say so in its brief. A medium change has
+one review per wave of build tasks when it has
 more than one wave, and the whole-change review. A large change has one
 review per wave of build tasks, a review of each build task marked at risk
 (its entry has `- risk: at risk`), and the whole-change review. A plan whose
@@ -383,11 +391,13 @@ the whole-change review also gets its line under its own number.
 Only Critical and Important findings start a fix round, and a fix round
 carries only those. Minor findings never start one: they are fixed in the
 whole-change fix wave or parked by a ruling, and listed in the final report.
-A task gets at most its size's cap of fix rounds: 2 for a small change, 3
-for a medium or large one.
+A task gets at most its size's cap of fix rounds: 2 for a trivial or small
+change, 3 for a medium or large one.
 
 - Every round goes to the same builder, and ends with a review of the fix
-  diff only.
+  diff only. In a trivial change, and for a fix routed from a verify
+  failure in a small one, it ends with the test task dispatched again in
+  verify mode instead.
 - Count the rounds, `T<n> fix round <r>/<cap>: ...`, with `<cap>` the cap of
   the change's size.
 - At the cap, start no further round. Rule on each open finding in a
@@ -420,12 +430,14 @@ every repo's diff, the latest evidence when there is one, and the ledger's
 deferred minors and rulings. In a plan whose build tasks form one wave, it
 is the one review: dispatch it once those build tasks report, before verify.
 Otherwise dispatch it after verify's first green run (for a sharded verify,
-the first time its shards' records are green together, below). For a small
-change, the whole-change review is its one review, and its findings run the
-fix loop of `PROCESS.md §5`: only Critical and Important findings start a
-fix round, every round goes to the same builder, and the cap is 2 rounds.
-Its Minor findings are parked by one ruling and listed in the final report;
-no fix wave batches them. For a medium or large change, the whole-change fix
+the first time its shards' records are green together, below). A trivial
+change has none. For a small change, the whole-change review is its one
+review, and its findings run the fix loop of `PROCESS.md §5`: it reports
+only Critical and Important findings, each starts a fix round, every round
+goes to the same builder, and the cap is 2 rounds. It reports no Minor
+finding, so none is parked and no fix wave runs. A small change's one test
+task waits for this review to close, so verify runs once at the reviewed
+code. For a medium or large change, the whole-change fix
 wave runs only when the whole-change review has a Critical or Important
 finding, and then also takes the batched Minor findings; with none, they are
 parked by one ruling and listed in the final report. The fix wave goes to
@@ -433,7 +445,8 @@ one builder, then one re-review, and its rounds count toward the cap of 3.
 At either cap the lead rules on each open finding in a line that begins
 `Ruling: T<n> open findings`. In a plan whose build tasks form one wave, a
 fix that lands after the whole-change review, such as one routed from a
-verify failure, gets a review of its fix diff only.
+verify failure, gets a review of its fix diff only; in a small change it
+gets none, and verify running again is its check.
 
 **Rulings.** When the spec supports an answer, decide and keep going, and
 record one line, `Ruling: <what>; <why>; <cost if wrong>`. Every ruling
@@ -534,9 +547,10 @@ tasks.
 
 ### Size
 
-The change's size is its spec header's `- size:` line: small, medium or
-large, or spike (`PROCESS.md §9`). A change is small unless its approved
-spec says another size. The size sets the plan, the blind tests, the
+The change's size is its spec header's `- size:` line: trivial, small,
+medium or large, or spike (`PROCESS.md §9`). A change is small unless its
+approved spec says another size, and trivial only on the operator's
+word. The size sets the plan, the blind tests, the
 reviews, the fix-round cap and the gates.
 
 - No agent changes a size, you included. An agent that sees the change
@@ -555,8 +569,9 @@ reviews, the fix-round cap and the gates.
 ### Merge and integrate
 
 Integrate starts once verify is green (for a sharded verify, its shards'
-records green together) and the whole-change review has no open Critical
-or Important finding. Nothing merges without the human's word.
+records green together) and the whole-change review, where the plan has
+one, has no open Critical or Important finding. Nothing merges without the
+human's word.
 
 1. Before a merge, compare the latest evidence's `commit_set` (each
    shard's latest record, for a sharded verify) with the current pins in

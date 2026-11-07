@@ -167,7 +167,9 @@ Decide each task's state by the first of these that holds. The ledger terms
 (reported, review closed, held) are defined in `SKILL.md` section 1.4.
 
 1. **done.**
-   - A build task: it has reported, and its review is closed.
+   - A build task: it has reported, and its review is closed. A build task
+     no review task reviews (`SKILL.md` section 1.3), as in a trivial
+     change's stub plan, is done once it has reported.
    - A review task that reviews build tasks (`SKILL.md` section 1.3): the
      review of each of them is closed. A whole-change review that reviews
      build tasks needs its own review closed as well.

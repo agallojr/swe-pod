@@ -5,7 +5,10 @@
 - role: test
 
 <!--
-Record: changes/<id>/tasks/T<n>-brief.md, for a test-writing task. It holds
+Record: changes/<id>/tasks/T<n>-brief.md, for a test-writing task, and for
+the one test task of a small or trivial change, whose ## Task lists the blind
+tests to write, then verify with its commit set and environment class (a
+verify-only brief when there is nothing to write). It holds
 the spec path, the interface contract, the global constraints and the test
 map, and no implementation body, diff, builder report or build-task step.
 Replace every <placeholder>, then delete these comments. The last line stays

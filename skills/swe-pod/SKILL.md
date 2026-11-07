@@ -73,7 +73,7 @@ Read each change's state from its records, never from memory
 | abandoned | `spec.md` has `abandoned:` with a reason |
 | integrated | `spec.md` has `integrated:`, and the folder is under `changes/archive/` |
 | proposed | `spec.md` has no `approved:` line |
-| verified | the latest evidence (1.6) is green at the current commit set (1.5), or for a sharded verify the shards' latest records are green together (1.7); and the whole-change review is done with no open Critical or Important finding |
+| verified | the latest evidence (1.6) is green at the current commit set (1.5), or for a sharded verify the shards' latest records are green together (1.7); and the whole-change review, where the plan has one, is done with no open Critical or Important finding. A plan with no review task, a trivial change's stub, needs only the evidence |
 | building | the ledger has a dispatch line |
 | planned | `plan.md` exists, and its `## Self-review` section is filled in: not empty, and no unchecked `- [ ]` item left |
 | approved | `spec.md` has `approved:` |

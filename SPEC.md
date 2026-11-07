@@ -550,6 +550,16 @@ also" is two changes. (OS)
 > project is now large. An archived spec keeps its old size name and reads by
 > the legacy-names note of `PROCESS.md` §9 (add-size-gauge/R1 to R3, R11).
 
+> Note (direct edit `lighten-small-and-trivial`, `swe-pod-process@4`, made on
+> the operator's word outside the pod, with no spec): a trivial size sits
+> below small, on the operator's word, with a stub plan, one test agent that
+> runs verify, and no review. Small now writes blind tests only for the
+> requirements its risk table marks at risk, has one test agent for test
+> writing and verify after the review, and its review reports no Minor
+> findings. At every size, briefs quote the requirements they serve and
+> agents read `PROCESS.md` only by section. This supersedes in part
+> add-size-gauge/R4 to R6 and R13.S1; the record is in the space's `notes/`.
+
 ## 6. Roles
 
 | Role | Writes | Never |

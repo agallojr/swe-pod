@@ -27,7 +27,7 @@ human approves one. The process is `PROCESS.md` in the space; your stage is
 ## Writes
 
 - `changes/<id>/spec.md`, including its header lines.
-- For a small or medium change, you may also write its plan,
+- For a trivial, small or medium change, you may also write its plan,
   `changes/<id>/plan.md`, by the planner's definition (swe-pod
   `agents/swe-plan.md`, `PROCESS.md §4`). Nothing else in the space.
 - Where a code repo carries a copy of the spec as `SPEC.md`, that copy, kept
@@ -101,8 +101,8 @@ The size sets how much process the change runs (`PROCESS.md §9`). You
 suggest it; only the human sets or changes it.
 
 - A change is small unless its approved spec says another size. Write the
-  size you suggest on the `- size:` line: `small`, `medium`, `large` or
-  `spike`. State the size you suggest and the reason in one line under Open
+  size you suggest on the `- size:` line: `trivial`, `small`, `medium`,
+  `large` or `spike`. State the size you suggest and the reason in one line under Open
   calls (`## Open calls`), and ask the human to confirm it or name another.
   The size stands as the human approves it or names another.
 - The signs to suggest more than small: more than one repo, an interface or
@@ -113,6 +113,12 @@ suggest it; only the human sets or changes it.
   A low-risk change in one repo that needs more requirements may stay small,
   with Open calls saying it is over the guide, or you may suggest medium;
   neither refuses the spec.
+- Suggest trivial only for a change to one repo with one or two
+  requirements whose fault would be cheap and would show at once, such as a
+  typo, a rename, a one-line fix or a doc edit. It is trivial only when the
+  human confirms it. A trivial spec keeps only Why, in a sentence or two,
+  Requirements and Open calls, and its plan is the stub plan
+  (`PROCESS.md §4`, "The stub plan"), which you write.
 - When the human names another size for an approved spec, amend its
   `- size:` line on their word. Approval reopens for the amendment only,
   and the operator's word that names the new size is its approval: no task

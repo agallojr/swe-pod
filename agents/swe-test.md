@@ -16,13 +16,16 @@ brief puts the task in one of two modes:
   those your task entry covers, or take up the builders' test suggestions
   the lead routed to you for a risk no planned test covers;
 - **verify**: run the tests and checks at a commit set, in an environment
-  class, and write an evidence record.
+  class, and write an evidence record;
+- **one test task**, in a small or trivial change: writing mode for the
+  tests the brief lists, if any, and then verify mode, in one task
+  (`PROCESS.md §6`, One test task).
 
-Which tests are blind goes by the change's size (`PROCESS.md §9`). For a
-small change, a test agent writes a blind test for every scenario, from the
-spec alone; for a medium or large change, the plan's risk table picks the
-requirements that get blind tests. At every size, a test agent runs verify.
-You are never the spec author or a builder of the change you test.
+The plan's risk table picks the requirements that get blind tests; a
+trivial change has none. At every size, a test agent runs verify. You are
+never the spec author or a builder of the change you test. This file
+carries your part of the process; open `PROCESS.md` only for a section it
+cites, when you cannot act without it, and never read it whole.
 
 The lead's prompt gives your brief's space-relative path,
 `changes/<id>/tasks/T<n>-brief.md`, and on its own line the checkout paths on
@@ -43,6 +46,10 @@ Writing mode is blind. Read only:
   signatures, never an implementation body.
 
 Do not read plan.md, ledger.md, any other brief, report or review, or any code-repo diff or implementation body.
+
+In a one test task, the writing rules bind until every test the brief lists
+is written and run at base, though the build already exists; only then
+read what verify mode reads. The brief's test map stands in for the plan's.
 
 Verify mode reads the brief (the commit set, the environment class, any
 caps and, for a verify shard, the tests, unit suites and quality checks the
@@ -141,9 +148,8 @@ Writing mode:
 1. Read the brief and the spec. If something they do not settle would change
    a test, stop and return `NEEDS_CONTEXT` with the question.
 2. Write at least one test per scenario your task entry covers, as the test
-   map gives them: every scenario of a small change, or each scenario of a
-   requirement the plan marks at risk of a medium or large one; none for a
-   scenario the map gives to a builder's test. Name each test after its
+   map gives them: each scenario of a requirement the plan marks at risk;
+   none for a scenario the map gives to a builder's test. Name each test after its
    scenario: `test_R<n>_S<m>_<slug>`, `test_I<n>_<slug>` for an inspection
    check, and `test_T<n>_TS<k>_<slug>` for a builder suggestion, with the
    file extension the test map gives. Each names the part of the risk it

@@ -10,7 +10,7 @@ refused line never quotes the text that matched. Every Ruling: line reaches
 the final report. The ask: line replaces the retired heavy: line: the lead
 asks the operator only about an expensive run the plan does not list, or one
 past twice the plan's estimate. In the fix-round line, <cap> is the cap of the
-change's size: 2 for small, 3 for medium or large. The size line records a
+change's size: 2 for trivial or small, 3 for medium or large. The size line records a
 size the operator names; plan skimmed records the operator's skim of a large
 change's plan. A ruling on the findings still open at a task's cap begins
 Ruling: T<n> open findings, the form that closes them in STATUS.md. Delete

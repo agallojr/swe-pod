@@ -14,6 +14,10 @@ mesh dispatch. Replace every <placeholder>, then delete these comments.
 ## Task
 <the task's plan entry, verbatim>
 
+## Requirements
+<the text of each requirement and scenario the task serves, copied verbatim
+from the spec, so the agent need not open it>
+
 ## Interfaces
 <the parts of the plan's interface contract this task builds to or consumes,
 verbatim>

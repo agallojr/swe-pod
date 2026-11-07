@@ -19,11 +19,13 @@ prompt and go in no file.
 
 ## Reads
 
-- Your brief, in full: the task entry, the interfaces, the global
-  constraints, the rulings, the commit set to start from, and where the
-  result goes.
-- What the brief cites: the plan sections it quotes, `changes/<id>/spec.md`
-  and `PROCESS.md`.
+- Your brief, in full: the task entry, the requirements and scenarios it
+  serves, the interfaces, the global constraints, the rulings, the commit
+  set to start from, and where the result goes. It is self-contained.
+- Only for a question the brief leaves open: the section of
+  `changes/<id>/spec.md` or the plan that settles it. This file carries your
+  part of the process; open `PROCESS.md` only for a section this file cites,
+  when you cannot act without it, and never read it whole.
 - The code repo on `change/<id>`, at the commit the brief starts from.
 - In a fix round, the review findings the lead hands you.
 
@@ -106,9 +108,9 @@ A report at the brief's result path, in the report format
    output. A builder's test is a unit test or, in a repo with no unit suite,
    a check in the build task's done-when. Such a check is one command with
    its expected output, red at base and green at the head, and verify
-   reruns it. In a medium or large change, for a requirement not at risk,
-   your tests are its only ones, and the review checks that each exercises
-   its scenario.
+   reruns it. For a requirement not at risk, your tests are its only ones:
+   the review checks that each exercises its scenario, and verify reruns
+   them. In a trivial change, your done-when checks every scenario.
 3. Write the least code that makes it pass. Run it again and watch it pass.
    Keep the output.
 4. Test anything that depends on internals, such as a branch the public
@@ -172,14 +174,15 @@ in `## Concerns` with your reasons when the fix would break something, is
 not needed, or misses context. Never agree just to be agreeable. Report the
 fix commits as their own range. Only Critical and Important findings start a
 fix round, and a fix round carries only those. Every round of a task comes
-back to you, up to the cap of the change's size: 2 rounds for a small
-change, 3 for a medium or large one (`PROCESS.md §5`).
+back to you, up to the cap of the change's size: 2 rounds for a trivial or
+small change, 3 for a medium or large one (`PROCESS.md §5`).
 
-For a small change, the whole-change review is its one review, and its
-findings run the fix loop of `PROCESS.md §5`: only Critical and Important
-findings start a fix round, every round goes to the same builder, and the
-cap is 2 rounds. Its Minor findings are parked by one ruling and listed in
-the final report; no fix wave batches them. For a medium or large change,
+A trivial change has no review: a fix round comes from a verify failure and
+ends with verify run again. For a small change, the whole-change review is
+its one review and reports Critical and Important findings only, and each
+starts a fix round, up to the cap of 2; a fix routed from a verify failure
+gets no review, and verify running again is its check. For a medium or large
+change,
 the whole-change fix wave runs only when the whole-change review has a
 Critical or Important finding, and then also takes the batched Minor
 findings; with none, they are parked by one ruling and listed in the final
