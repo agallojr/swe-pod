@@ -329,10 +329,10 @@ code it describes has written the code instead.
    medium or large one (role test, `after: []`, so it starts at the go); a
    suggestions task (role test, after every build task), which runs only
    when the lead routes a builder's suggestion to the test agent (§6); and
-   the verify run (role test, after every build and test task, with
-   `needs:` naming the environment class the tests require), whole or in
-   shards, each shard with its own `needs:`. A spec with entries under `supersedes` also gets a
-   test task that writes their replacements in `changes/<id>/tests/`;
+   the verify run (role test, after every build and test task, with `needs:`
+   naming the environment class the tests require), whole or in shards, each
+   shard with its own `needs:`. A spec with entries under `supersedes` also
+   gets a test task that writes their replacements in `changes/<id>/tests/`;
    verify gives the old tests `superseded by <key>`, and integrate moves
    them out of `tests/` (§7, §8).
 7. **Review tasks**, by the change's size (§9). A small change has one
@@ -367,13 +367,15 @@ A small change's plan is terse. It keeps these sections, with the plan
 template's section numbers: 1 Goal and approach, in a sentence or two; 2
 Interface contract, only where the tests drive a public surface; 5 Tasks,
 its one build task with its done-when; 6 Test tasks, the blind-test task and
-verify, with no risk table and no expensive-runs table; 7 Review tasks, the
-whole-change review; 8 Integrate task; 9 Test map, a row for every scenario;
-and Self-review, filled in with no unchecked item. It leaves out 3 Global
-constraints, 4 File map, 10 Dependency summary and Questions for the spec.
-The operator does not skim it. The `swe-pod` skill reads it by the rules
-every plan shares: it is planned once its Self-review is filled in, its
-tasks are its entries in sections 5 to 8, and its test map is section 9.
+verify, and the suggestions task and the replacements task of a spec with
+`supersedes` when the change needs them, with no risk table and no
+expensive-runs table; 7 Review tasks, the whole-change review; 8 Integrate
+task; 9 Test map, a row for every scenario; and Self-review, filled in with
+no unchecked item. It leaves out 3 Global constraints, 4 File map, 10
+Dependency summary and Questions for the spec. The operator does not skim
+it. The `swe-pod` skill reads it by the rules every plan shares: it is
+planned once its Self-review is filled in, its tasks are its entries in
+sections 5 to 8, and its test map is section 9.
 
 ### Risk and the tests it calls for
 
@@ -874,15 +876,24 @@ below). It reviews the whole change: the spec, the plan, every repo's diff,
 the latest evidence when there is one, and the ledger's deferred minors and
 rulings. It checks completeness (every requirement has code and a test that
 covers it), correctness (the code does what the spec means, edge cases
-included) and coherence (the plan's decisions show in the code), and that
-each builder's test exercises its scenario (§5). It uses the review format
-of §5, under its own task number. The whole-change fix wave runs only when
-the whole-change review has a Critical or Important finding, and then also
-takes the batched Minor findings; with none, they are parked by one ruling
-and listed in the final report. The fix wave goes to one builder, then one
-re-review. The lead rules on what remains. In a plan whose build tasks form
-one wave, a fix that lands after the whole-change review, such as one routed
-from a verify failure, gets a review of its fix diff only.
+included) and coherence (the plan's decisions show in the code), and, in a
+medium or large change, that each builder's test of a requirement not at
+risk exercises its scenario (§5). It uses the review format of §5, under its
+own task number.
+
+For a small change, the whole-change review is its one review, and its
+findings run the fix loop of §5: only Critical and Important findings start
+a fix round, every round goes to the same builder, and the cap is 2 rounds.
+Its Minor findings are parked by one ruling and listed in the final report;
+no fix wave batches them. For a medium or large change, the whole-change fix
+wave runs only when the whole-change review has a Critical or Important
+finding, and then also takes the batched Minor findings; with none, they are
+parked by one ruling and listed in the final report. The fix wave goes to
+one builder, then one re-review, and its rounds count toward the cap of 3.
+At either cap the lead rules on each open finding in a line that begins
+`Ruling: T<n> open findings`. In a plan whose build tasks form one wave, a
+fix that lands after the whole-change review, such as one routed from a
+verify failure, gets a review of its fix diff only.
 
 ### Sharded verify
 
@@ -1007,7 +1018,7 @@ spec is written (§3):
 |---|---|---|---|---|---|---|---|
 | small (default) | one intent, about 3 requirements, one repo, low risk | short | terse; the spec author may write it | every scenario | the whole-change review | 2 | spec approval (also the go), merge |
 | medium | several requirements, or one repo with moderate risk | full | short, with the risk table; the spec author may write it | requirements the plan marks at risk | one per wave when there is more than one wave, and the whole-change review | 3 | spec approval (also the go), merge |
-| large | several repos, an interface or data-format change, anything costly to get wrong | full | full, by a fresh planner, with the risk and cost tables | requirements the plan marks at risk | one per wave, one per build task marked at risk, and the whole-change review | 3 | spec approval, plan skim, merge |
+| large | several repos, an interface or data-format change, anything costly to get wrong | full | full, by a fresh planner, with the risk and expensive-runs tables | requirements the plan marks at risk | one per wave, one per build task marked at risk, and the whole-change review | 3 | spec approval, plan skim, merge |
 | spike | building something throwaway is the fastest way to learn | the question and what would answer it | none | none | none | none | none |
 
 The plan is terse, short or full as §4 says; the fix rounds are the cap per
@@ -1021,14 +1032,18 @@ task (§5).
   costly or show late, a need for agent-class or live-class tests.
 - No agent changes a size. An agent that sees the change outgrow its size
   says so in one line to the lead, who tells the operator. On the
-  operator's word the spec's size line is amended, approval reopens for the
-  amendment only, the steps the new size adds are made from there, work
-  already done stands, and the ledger records `size <old> -> <new> by <handle>`.
-  Stepping down drops the steps not yet made and keeps filed records.
+  operator's word the spec's size line is amended. Approval reopens for the
+  amendment only, and the operator's word that names the new size is its
+  approval: no task is held, and no `approval reopened` line is written,
+  since a size line is not a requirement. The steps the new size adds are
+  made from there, work already done stands, and the ledger records
+  `size <old> -> <new> by <handle>`. Stepping down drops the steps not yet
+  made and keeps filed records.
 - Legacy names: an archived spec's `size: small` reads as medium and
   `size: project` as large; archived files are not edited.
-- Every size keeps an approved spec before any build or test task, and four
-  different fresh agents: spec author, builder, test agent, reviewer (§10).
+- Every size of the gauge keeps an approved spec before any build or test
+  task, and four different fresh agents: spec author, builder, test agent,
+  reviewer (§10).
 - A spike has one build agent, no review, and never merges. Its output is a
   write-up in `notes/`. Keeping anything it produced is a new change with
   its own spec.
@@ -1049,15 +1064,15 @@ Each pod role is held by an agent, local or on the mesh, where the role is
 | **test** | project-level tests, evidence | writes code or the spec; reads implementation bodies, diffs or builder reports while writing tests |
 | **review** | review records | changes what it reviews; trusts a report over the diff |
 
-**Independence.** At every size, the spec author, the builder, the test
-agent and the reviewer are four different fresh agents, so the test agent is
-never the one that wrote the spec or the code. For a large change the
-planner is a different agent from the spec author too; for a small or
-medium change the spec author may write the plan. A different agent means
-at least a fresh context started from a brief or the operator's request,
-never another agent's session. Independence between agents comes from a
-fresh session or another node. Every role runs on Opus (§5). One node may
-hold several roles if each task runs as its own agent.
+**Independence.** At every size of the gauge, the spec author, the builder,
+the test agent and the reviewer are four different fresh agents, so the test
+agent is never the one that wrote the spec or the code. For a large change
+the planner is a different agent from the spec author too; for a small or
+medium change the spec author may write the plan. A different agent means at
+least a fresh context started from a brief or the operator's request, never
+another agent's session. Independence between agents comes from a fresh
+session or another node. Every role runs on Opus (§5). One node may hold
+several roles if each task runs as its own agent.
 
 **Placement.**
 
@@ -1321,7 +1336,9 @@ The template lists every event form:
   going. A ruling is one ledger line:
   `Ruling: <what>; <why>; <cost if wrong>`. Every ruling reaches the human
   in the final report. Never drop a finding silently: fix it, or park it
-  with a ruling. At a task's fix-round cap, rule on each open finding (§5).
+  with a ruling. At a task's fix-round cap, rule on each open finding in a
+  line of the form `Ruling: T<n> open findings <what>; <why>; <cost if wrong>`,
+  which closes it in the status view (§5).
 - **Stop and ask** only for: an irreversible or destructive action; a
   security-sensitive one; an effect outside the change's branches and
   folder (merging, pushing a shared branch, publishing, spending money or a
@@ -1343,7 +1360,7 @@ There are no commands. These are examples, not syntax.
 | "I want the nozzle solver to take a VQLS backend" | The spec author reads the code, plays the request back, asks the one question that matters most |
 | "Just draft it" / "Approved" | Draft with defaults listed / approval recorded |
 | "Go" | The lead dispatches every task with nothing left in its `after` list; on an unapproved spec it dispatches nothing and says the spec awaits approval (§2); on a large change whose plan has not been skimmed, it dispatches nothing and says the plan awaits the operator's skim (§4) |
-| "Make it medium" | The spec author amends the spec's size line on your word, approval reopens for the amendment only, and the lead records the size event and adds the steps medium adds from there (§9) |
+| "Make it medium" | The spec author amends the spec's size line on your word. Approval reopens for the amendment only, and the operator's word that names the new size is its approval: no task is held, and no `approval reopened` line is written, since a size line is not a requirement. The lead records the size event and adds the steps medium adds from there (§9) |
 | "Where are we?" | Status, read from the records |
 | "Run the tests on the Linux server" | The verify task goes to the mesh with `needs: linux-server` |
 | "Merge it" / "Hand this to `<handle>`" / "Throw it away" | Integrate / a handoff record / confirm, then mark abandoned |

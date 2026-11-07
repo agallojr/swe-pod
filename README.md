@@ -30,8 +30,8 @@ review. A large change has the full plan by a fresh planner, which you skim
 before the go, and the full set of reviews. Medium and large allow 3 fix
 rounds per task. The spec author suggests a size with its reason; only you
 set or change it, and an agent that sees a change outgrow its size says so
-in one line. Every size keeps an approved spec and four different fresh
-agents: spec author, builder, test agent and reviewer.
+in one line. Every size of the gauge keeps an approved spec and four
+different fresh agents: spec author, builder, test agent and reviewer.
 
 A change runs five stages:
 

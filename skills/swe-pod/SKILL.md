@@ -402,8 +402,9 @@ the commands.
    Not dispatched: the spec at changes/<id>/spec.md awaits approval.
    ```
 
-   Where the lead's Go step holds the go for the operator's skim of the
-   plan, dispatch nothing and give the line that step gives.
+   Where the change's size calls for the operator's skim of the plan and
+   the lead's Go step holds the go for it, dispatch nothing and give the
+   line that step gives.
 2. Read the change's state and its tasks (section 1). The ready tasks are
    those in state ready (`status-format.md`, "Task states"): not held,
    with no dispatch line yet, and whose `after` tasks are all done, or, for
@@ -418,8 +419,8 @@ the commands.
    list, or one past twice the plan's estimate, waits for the operator's
    word (`PROCESS.md §11`).
 4. When no task is ready, say what the change waits on: the human's
-   approval or go, the operator's skim of the plan, the plan, or the tasks
-   in flight.
+   approval or go, the operator's skim of the plan where the change's size
+   calls for one, the plan, or the tasks in flight.
 5. File the lead's records through the librarian, then regenerate
    `STATUS.md` (section 3).
 

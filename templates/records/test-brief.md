@@ -22,7 +22,8 @@ changes/<id>/spec.md
 <the plan's interface contract, verbatim>
 
 ## Global constraints
-<the plan's global constraints, verbatim, operator decisions included>
+<the plan's global constraints, verbatim, operator decisions included; for a
+terse plan, which has none: none in the plan; the spec is the source>
 
 ## Test map
 <the plan's test map, verbatim>

@@ -9,10 +9,12 @@ ledger's block starts empty. Machines appear only as environment classes. A
 refused line never quotes the text that matched. Every Ruling: line reaches
 the final report. The ask: line replaces the retired heavy: line: the lead
 asks the operator only about an expensive run the plan does not list, or one
-past twice the plan's estimate. In the fix-round line, <cap> is the cap of
-the change's size: 2 for small, 3 for medium or large. The size line records
-a size the operator names; plan skimmed records the operator's skim of a
-large change's plan. Delete this comment in a real ledger.
+past twice the plan's estimate. In the fix-round line, <cap> is the cap of the
+change's size: 2 for small, 3 for medium or large. The size line records a
+size the operator names; plan skimmed records the operator's skim of a large
+change's plan. A ruling on the findings still open at a task's cap begins
+Ruling: T<n> open findings, the form that closes them in STATUS.md. Delete
+this comment in a real ledger.
 -->
 
 ```
@@ -38,6 +40,7 @@ large change's plan. Delete this comment in a real ledger.
 <YYYY-MM-DDTHH:MMZ> T<n> not dispatched: <run>; past twice the estimate, no operator present
 <YYYY-MM-DDTHH:MMZ> Ruling: <what>; <why>; <cost if wrong>
                   <continuation of the line above, indented 18 spaces>
+<YYYY-MM-DDTHH:MMZ> Ruling: T<n> open findings <what>; <why>; <cost if wrong>
 <YYYY-MM-DDTHH:MMZ> filed <space path>[, ...]
 <YYYY-MM-DDTHH:MMZ> refused <space path>: <profile|reference|id|lane> line <n>
 ```

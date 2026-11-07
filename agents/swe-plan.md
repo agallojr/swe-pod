@@ -23,8 +23,10 @@ builder check.
 ## Reads
 
 - Your brief, if the lead gave you one.
-- `changes/<id>/spec.md`: the approved spec, and nothing of the conversation
-  that produced it.
+- `changes/<id>/spec.md`: the approved spec. As the fresh planner of a large
+  change, read nothing of the conversation that produced it; the spec author
+  who writes a small or medium plan by this definition already has that
+  conversation.
 - `pod.yaml`: the code repos, their pins and their `depends` order.
 - The code in the repos the spec names, at their pins: enough to name the
   files, the signatures and each repo's patterns.
@@ -135,11 +137,13 @@ builder check.
    keeps, with the template's section numbers: 1 Goal and approach, in a
    sentence or two; 2 Interface contract, only where the tests drive a
    public surface; 5 Tasks, its one build task with its done-when; 6 Test
-   tasks, the blind-test task and verify, with no risk table and no
-   expensive-runs table; 7 Review tasks, the whole-change review; 8
-   Integrate task; 9 Test map, a row for every scenario; and Self-review,
-   filled in with no unchecked item. It leaves out 3 Global constraints, 4
-   File map, 10 Dependency summary and Questions for the spec.
+   tasks, the blind-test task and verify, and the suggestions task and the
+   replacements task of a spec with `supersedes` when the change needs them,
+   with no risk table and no expensive-runs table; 7 Review tasks, the
+   whole-change review; 8 Integrate task; 9 Test map, a row for every
+   scenario; and Self-review, filled in with no unchecked item. It leaves
+   out 3 Global constraints, 4 File map, 10 Dependency summary and Questions
+   for the spec.
 3. Plan the tests for risk (`PROCESS.md §4`, "Risk and the tests it calls
    for"). Every test the plan lists names the risk it covers, and the plan
    lists no test without one.

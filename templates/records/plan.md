@@ -16,10 +16,12 @@ comments.
 The plan's length goes by the size (PROCESS.md §4 and §9). A medium or large
 plan has every section below; a large one is written by a fresh planner. A
 small plan is terse: keep sections 1, 2 (only where the tests drive a public
-surface), 5 (its one build task), 6 (the blind-test task and verify, with no
-risk table and no expensive-runs table), 7 (the whole-change review), 8, 9 (a
-row for every scenario) and Self-review, with their numbers, and leave out 3,
-4, 10 and Questions for the spec.
+surface), 5 (its one build task), 6 (the blind-test task and verify, and the
+suggestions task and the replacements task of a spec with supersedes when the
+change needs them, with no risk table and no expensive-runs table), 7 (the
+whole-change review), 8, 9 (a row for every scenario) and Self-review, with
+their numbers, and leave out 3 Global constraints, 4 File map, 10 Dependency
+summary and Questions for the spec.
 -->
 
 ## 1. Goal and approach

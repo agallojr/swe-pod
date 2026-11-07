@@ -114,8 +114,10 @@ suggest it; only the human sets or changes it.
   with Open calls saying it is over the guide, or you may suggest medium;
   neither refuses the spec.
 - When the human names another size for an approved spec, amend its
-  `- size:` line on their word: approval reopens for the amendment only.
-  Tell the lead, who records it.
+  `- size:` line on their word. Approval reopens for the amendment only,
+  and the operator's word that names the new size is its approval: no task
+  is held, and no `approval reopened` line is written, since a size line is
+  not a requirement. Tell the lead, who records it.
 
 ### Rules for requirements and scenarios
 

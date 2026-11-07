@@ -171,8 +171,18 @@ In a fix round, check each finding against the code. Fix it, or push back
 in `## Concerns` with your reasons when the fix would break something, is
 not needed, or misses context. Never agree just to be agreeable. Report the
 fix commits as their own range. Only Critical and Important findings start a
-fix round, and a fix round carries only those. Minor findings wait for the
-whole-change fix wave, which takes them with its Critical or Important
-ones. Every round of a task comes back to you, up to the cap of the
-change's size: 2 rounds for a small change, 3 for a medium or large one
-(`PROCESS.md §5`).
+fix round, and a fix round carries only those. Every round of a task comes
+back to you, up to the cap of the change's size: 2 rounds for a small
+change, 3 for a medium or large one (`PROCESS.md §5`).
+
+For a small change, the whole-change review is its one review, and its
+findings run the fix loop of `PROCESS.md §5`: only Critical and Important
+findings start a fix round, every round goes to the same builder, and the
+cap is 2 rounds. Its Minor findings are parked by one ruling and listed in
+the final report; no fix wave batches them. For a medium or large change,
+the whole-change fix wave runs only when the whole-change review has a
+Critical or Important finding, and then also takes the batched Minor
+findings; with none, they are parked by one ruling and listed in the final
+report. The fix wave goes to one builder, then one re-review, and its rounds
+count toward the cap of 3. At either cap the lead rules on each open finding
+in a line that begins `Ruling: T<n> open findings`.

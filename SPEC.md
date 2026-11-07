@@ -154,7 +154,7 @@ Space stays on `main`.
 |---|---|---|---|---|---|
 | **spec** | spec, with the human | the request, the code, earlier specs it touches | `spec.md` | every requirement has a scenario; the human approved | human approves |
 | **plan** | plan | the approved spec, the code | `plan.md` | every requirement traces to a build task and every scenario to a test; self-review passes | human skims (large change only) |
-| **build** | build; review per task | its brief | code and unit tests on `change/<id>` | each task passes its done-when and its review | none |
+| **build** | build; the reviews of the change's size | its brief | code and unit tests on `change/<id>` | each task passes its done-when and the review that covers it | none |
 | **verify** | test; review | spec, project-level tests, the commit set | evidence, whole-change review | every project-level test, unit suite and declared quality check passes at the commit set; no open Critical or Important finding | none |
 | **integrate** | human, lead | everything above | merges, pins, docs, plans, final report, archive | merged in dependency order; tests promoted; report filed | human merges |
 
@@ -485,10 +485,19 @@ The lead routes each failure:
 After the first green run, a fresh reviewer reviews the whole change: the
 spec, the plan, every repo's diff, the latest evidence, and the ledger's
 deferred minors and rulings. It checks completeness (every requirement has
-code and a passing test), correctness (the code does what the spec means, edge
-cases included) and coherence (the plan's decisions show in the code). (OS)
-Its findings go to one builder in one fix wave, then one re-review; the lead
-rules on what remains. (SP)
+code and a passing test), correctness (the code does what the spec means,
+edge cases included) and coherence (the plan's decisions show in the code).
+(OS) For a small change, the whole-change review is its one review, and its
+findings run the fix loop of §5.3: only Critical and Important findings
+start a fix round, every round goes to the same builder, and the cap is 2
+rounds. Its Minor findings are parked by one ruling and listed in the final
+report; no fix wave batches them. For a medium or large change, the
+whole-change fix wave runs only when the whole-change review has a Critical
+or Important finding, and then also takes the batched Minor findings; with
+none, they are parked by one ruling and listed in the final report. The fix
+wave goes to one builder, then one re-review, and its rounds count toward
+the cap of 3. At either cap the lead rules on each open finding in a line
+that begins `Ruling: T<n> open findings`. (SP)
 
 ### 5.6 Integrate
 
@@ -525,7 +534,7 @@ gauge, with small the default; a spike is outside it.
 |---|---|---|---|---|---|---|---|
 | small (default) | one intent, about 3 requirements, one repo, low risk | short | terse; the spec author may write it | every scenario | the whole-change review | 2 | spec approval (also the go), merge |
 | medium | several requirements, or one repo with moderate risk | full | short, with the risk table; the spec author may write it | requirements the plan marks at risk | one per wave when there is more than one wave, and the whole-change review | 3 | spec approval (also the go), merge |
-| large | several repos, an interface or data-format change, anything costly to get wrong | full | full, by a fresh planner, with the risk and cost tables | requirements the plan marks at risk | one per wave, one per build task marked at risk, and the whole-change review | 3 | spec approval, plan skim, merge |
+| large | several repos, an interface or data-format change, anything costly to get wrong | full | full, by a fresh planner, with the risk and expensive-runs tables | requirements the plan marks at risk | one per wave, one per build task marked at risk, and the whole-change review | 3 | spec approval, plan skim, merge |
 | spike | building something throwaway is the fastest way to learn | the question and what would answer it | none | none | none | none | none |
 
 A spike has one build agent, no review, and never merges. Its output is a
@@ -553,12 +562,13 @@ also" is two changes. (OS)
 | **test** | project-level tests, evidence | writes code or the spec; reads implementation bodies, diffs or builder reports while writing tests |
 | **review** | review records | changes what it reviews; trusts a report over the diff |
 
-**Independence.** At every size, the spec author, the builder, the test agent
-and the reviewer are four different fresh agents; for a large change the
-planner is different from the spec author too. "Different agent" means at
-least a fresh context started from a brief, never another agent's session.
-Where a mistake would be costly, use another node too, so blind spots are not
-shared. One node may hold several roles if each task runs as its own agent.
+**Independence.** At every size of the gauge, the spec author, the builder,
+the test agent and the reviewer are four different fresh agents; for a large
+change the planner is different from the spec author too. "Different agent"
+means at least a fresh context started from a brief or the operator's
+request, never another agent's session. Where a mistake would be costly, use
+another node too, so blind spots are not shared. One node may hold several
+roles if each task runs as its own agent.
 
 > Note (change `add-size-gauge`, `swe-pod-process@3`): independence between
 > agents comes from a fresh session or another node, and every role runs on

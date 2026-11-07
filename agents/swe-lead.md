@@ -418,16 +418,22 @@ fault, so take it to the human with what was tried.
 **Whole-change review.** Dispatch a fresh reviewer with the spec, the plan,
 every repo's diff, the latest evidence when there is one, and the ledger's
 deferred minors and rulings. In a plan whose build tasks form one wave, it
-is the one review: dispatch it once those build tasks report, before
-verify. Otherwise dispatch it after verify's first green run (for a sharded
-verify, the first time its shards' records are green together, below).
-The whole-change fix wave runs only when the whole-change review has a
-Critical or Important finding, and then also takes the batched Minor
-findings; with none, they are parked by one ruling and listed in the final
-report. The fix wave goes to one builder, then one re-review; you rule on
-what remains. In a plan whose build tasks form one wave, a fix that lands
-after the whole-change review, such as one routed from a verify failure,
-gets a review of its fix diff only.
+is the one review: dispatch it once those build tasks report, before verify.
+Otherwise dispatch it after verify's first green run (for a sharded verify,
+the first time its shards' records are green together, below). For a small
+change, the whole-change review is its one review, and its findings run the
+fix loop of `PROCESS.md §5`: only Critical and Important findings start a
+fix round, every round goes to the same builder, and the cap is 2 rounds.
+Its Minor findings are parked by one ruling and listed in the final report;
+no fix wave batches them. For a medium or large change, the whole-change fix
+wave runs only when the whole-change review has a Critical or Important
+finding, and then also takes the batched Minor findings; with none, they are
+parked by one ruling and listed in the final report. The fix wave goes to
+one builder, then one re-review, and its rounds count toward the cap of 3.
+At either cap the lead rules on each open finding in a line that begins
+`Ruling: T<n> open findings`. In a plan whose build tasks form one wave, a
+fix that lands after the whole-change review, such as one routed from a
+verify failure, gets a review of its fix diff only.
 
 **Rulings.** When the spec supports an answer, decide and keep going, and
 record one line, `Ruling: <what>; <why>; <cost if wrong>`. Every ruling
@@ -537,11 +543,13 @@ reviews, the fix-round cap and the gates.
   outgrow its size says so in one line to the lead. Tell the operator in
   one line, and add no plan section, review or gate until the operator
   names a new size.
-- On the operator's word the spec author amends the spec's size line, and
-  approval reopens for the amendment only. Record
-  `size <old> -> <new> by <handle>`. The steps the new size adds, such as a
-  plan section, a review or a gate, are made from there, and work already
-  done stands, its tasks and commits included.
+- On the operator's word the spec author amends the spec's size line.
+  Approval reopens for the amendment only, and the operator's word that
+  names the new size is its approval: no task is held, and no
+  `approval reopened` line is written, since a size line is not a
+  requirement. Record `size <old> -> <new> by <handle>`. The steps the new
+  size adds, such as a plan section, a review or a gate, are made from
+  there, and work already done stands, its tasks and commits included.
 - Stepping down drops the steps not yet made and keeps filed records.
 
 ### Merge and integrate
@@ -650,6 +658,7 @@ approval reopened for <Rn>[, <Rm>]; held T<a>[, T<b>]
 ask: <handle> before T<n>: <run>; <unlisted|past twice the estimate>; spent <s> s, <USD> USD of <s> s, <USD> USD estimated
 T<n> not dispatched: <run>; past twice the estimate, no operator present
 Ruling: <what>; <why>; <cost if wrong>
+Ruling: T<n> open findings <what>; <why>; <cost if wrong>
 filed <space path>[, ...]
 refused <space path>: <profile|reference|id|lane> line <n>
 ```
