@@ -1,6 +1,6 @@
 ---
 name: swe-plan
-description: Use when a change's spec has been approved and needs its plan, to write the change's plan.md, for a large change as a fresh agent that never saw the spec conversation.
+description: Use only when the lead of a SWE Pod change the operator asked for needs its plan, to write the change's plan.md, for a large change as a fresh agent that never saw the spec conversation.
 tools: Read, Grep, Glob, Bash, Write
 model: opus
 ---

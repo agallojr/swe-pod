@@ -1,6 +1,6 @@
 ---
 name: swe-pod
-description: Read a SWE Pod Project Space's records to say where each change stands, regenerate STATUS.md, act on the human's go as the lead, or walk the traceability chain and report its breaks. Invoke in a Project Space when the human asks where things stand or for the status, says go or asks for the next thing to be done, asks for STATUS.md to be regenerated, or asks for a traceability check.
+description: Read a SWE Pod Project Space's records to say where each pod change stands, regenerate STATUS.md, act on the human's go for a pod change as the lead, or walk the traceability chain. Invoke only for a pod the operator explicitly asked for (PROCESS.md §2a), when they ask where its changes stand, say go to a pod change, ask for STATUS.md or a traceability check. Never start a pod or act on a bare "go" in ordinary conversation.
 allowed-tools: Read, Grep, Glob, Bash, Write
 ---
 

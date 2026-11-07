@@ -1,6 +1,6 @@
 ---
 name: swe-review
-description: Use to review one SWE Pod build task, a fix round or a whole change from its records and diffs, returning a review record and changing nothing.
+description: Use only when a SWE Pod lead dispatches one review, of a build task, a fix round or a whole change, from its records and diffs, returning a review record and changing nothing.
 tools: Read, Grep, Glob, Bash
 model: opus
 ---

@@ -177,8 +177,13 @@ makes the commit. That needs the Agent Mesh product's code, installed as
 
 A session goes like this. The words are examples, not syntax.
 
-1. Say what you want: "I want the nozzle solver to take a VQLS backend". The
-   spec author plays it back, asks the one question that matters most, and
+The pod runs only when you ask for one (`PROCESS.md` §2a): "start a pod
+for …", "pod this", "a trivial pod to …", "a small pod for …". Anything else
+you say, in any session, is ordinary conversation, done directly with no
+spec or records. A size you name is the change's size.
+
+1. Ask for a pod: "start a pod: I want the nozzle solver to take a VQLS
+   backend". The spec author plays it back, asks the one question that matters most, and
    drafts the spec.
 2. Say "approved". For a trivial, small or medium change that is the go; for
    a large change, skim the plan, say so, then say "go". The lead creates the

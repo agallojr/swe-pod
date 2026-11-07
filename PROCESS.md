@@ -148,10 +148,30 @@ commit. It is what verify runs against.
 | integrated | `spec.md` has `integrated:`; the folder is under `changes/archive/` |
 | abandoned | `spec.md` has `abandoned:` with a reason |
 
+## 2a Only when asked
+
+The pod runs only when the operator asks for one, in so many words: "start
+a pod for …", "pod this", "use the pod", "a trivial pod to fix …", "a small
+pod for …". Everything else in a conversation, a question, a request for a
+change, a fix, even "go" or "do it", is ordinary work: answer it or do it
+directly, outside the pod, with no spec, plan, branch, brief, dispatch or
+record. This holds in a session opened in a Project Space too, and for every
+role: no agent starts the spec author, the lead or the `swe-pod` skill's go
+on its own judgment. When a request looks big enough to want a pod, do it
+directly or say in one line that a pod is available, and start one only on
+the operator's word. Once a pod is asked for, its change runs as this file
+says until it is integrated or abandoned; "go", "approved" and "where are
+we?" about that change then speak to the pod.
+
+A size named in the ask, such as "a trivial pod", is the operator's word
+for the change's size (§9): write it on the spec's `- size:` line and
+suggest no other. With no size named, the spec author suggests one (§3).
+
 ## 3 Spec
 
-You are the spec author, and you work with the human. Describe the work to be
-done and nothing else. A spec covers its own change only. No spec of existing
+You are the spec author, started only when the operator has asked for a pod
+(§2a), and you work with the human. Describe the work to be done and nothing
+else. A spec covers its own change only. No spec of existing
 behavior is a precondition: a project starts with its first change, and its
 first spec covers only that change. Only you edit a spec, and only the human
 approves one.
@@ -239,6 +259,9 @@ The changed code SHALL pass the repo's linter with the repo's configuration.
 
 The size sets how much process the change runs (§9). You suggest it; only
 the human sets or changes it.
+
+- A size the operator named in asking for the pod, such as "a trivial pod",
+  is the size (§2a). Write it on the `- size:` line and suggest no other.
 
 - A change is small unless its approved spec says another size. Write the
   size you suggest on the `- size:` line. State the size you suggest and the
@@ -1153,7 +1176,8 @@ several roles if each task runs as its own agent.
 Remote build waits on the executor git exception (§11); until then, build
 runs local.
 
-**Single seat.** Without a mesh, one interactive session is spec author,
+**Single seat.** Without a mesh, one interactive session is, once the
+operator asks for a pod (§2a), its spec author,
 planner, lead and the space's librarian, and dispatches fresh local
 subagents for build, test and review. For a large change it plans through a
 fresh local subagent too, since a large change's spec and plan must be
@@ -1430,11 +1454,15 @@ The template lists every event form:
 
 ## 14 Talking to the pod
 
-There are no commands. These are examples, not syntax.
+There are no commands. These are examples, not syntax. Only an ask for a
+pod starts one (§2a); the rest of this table speaks to a pod already asked
+for.
 
 | The human says | What happens |
 |---|---|
-| "I want the nozzle solver to take a VQLS backend" | The spec author reads the code, plays the request back, asks the one question that matters most |
+| "Fix the typo in the README" / "Why does the solver diverge?" | No pod: ordinary work, done or answered directly, with no records (§2a) |
+| "Start a pod: I want the nozzle solver to take a VQLS backend" | The spec author reads the code, plays the request back, asks the one question that matters most |
+| "A trivial pod to fix the typo in the README" / "A small pod for …" | A pod at the size named: the spec's size line says it, and the spec author suggests no other (§2a, §9) |
 | "Just draft it" / "Approved" | Draft with defaults listed / approval recorded |
 | "Go" | The lead dispatches every task with nothing left in its `after` list; on an unapproved spec it dispatches nothing and says the spec awaits approval (§2); on a large change whose plan has not been skimmed, it dispatches nothing and says the plan awaits the operator's skim (§4) |
 | "Make it medium" | The spec author amends the spec's size line on your word. Approval reopens for the amendment only, and the operator's word that names the new size is its approval: no task is held, and no `approval reopened` line is written, since a size line is not a requirement. The lead records the size event and adds the steps medium adds from there (§9) |

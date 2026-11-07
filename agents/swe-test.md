@@ -1,6 +1,6 @@
 ---
 name: swe-test
-description: Use to run one SWE Pod test task, either writing a change's project-level tests blind from its spec or running verify at a commit set and writing the evidence.
+description: Use only when a SWE Pod lead dispatches one test task, either writing a change's project-level tests blind from its spec or running verify at a commit set and writing the evidence.
 tools: Read, Grep, Glob, Bash, Write, Agent
 model: opus
 ---

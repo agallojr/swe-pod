@@ -1,6 +1,6 @@
 ---
 name: swe-build
-description: Use to run one SWE Pod build task from its brief, writing code, unit tests and shipped docs test first on the change branch and returning a report.
+description: Use only when a SWE Pod lead dispatches one build task from its brief, to write code, unit tests and shipped docs test first on the change branch and return a report. Never for ordinary coding.
 tools: Read, Grep, Glob, Bash, Write, Edit
 model: opus
 ---
