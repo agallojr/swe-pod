@@ -252,11 +252,9 @@ the human sets or changes it.
   A low-risk change in one repo that needs more requirements may stay small,
   with Open calls saying it is over the guide, or you may suggest medium;
   neither refuses the spec.
-- Never suggest trivial. A change is trivial only when the operator asks
-  for it, and it still runs the pod: an approved spec, a builder and a test
-  agent, three different agents. It fits a change to one repo with one or
-  two requirements whose fault would be cheap and would show at once, such
-  as a typo, a rename, a one-line fix or a doc edit.
+- Suggest trivial only for a change to one repo with one or two
+  requirements whose fault would be cheap and would show at once, such as a
+  typo, a rename, a one-line fix or a doc edit.
 - A spike is outside the gauge (§9).
 
 ### Human review and approval
@@ -1078,7 +1076,7 @@ spec is written (§3):
 
 | Size | When | Spec | Plan | Blind tests | Test agents | Reviews | Fix rounds | Human gates |
 |---|---|---|---|---|---|---|---|---|
-| trivial (only when the operator asks) | one repo, one or two requirements, a fault cheap and seen at once: a typo, a rename, a one-line fix, a doc edit | Why, Requirements, Open calls | stub, by the spec author | none | one, verify only | none | 2 | spec approval (also the go), merge |
+| trivial (on the operator's word) | one repo, one or two requirements, a fault cheap and seen at once: a typo, a rename, a one-line fix, a doc edit | Why, Requirements, Open calls | stub, by the spec author | none | one, verify only | none | 2 | spec approval (also the go), merge |
 | small (default) | one intent, about 3 requirements, one repo, low risk | short | terse, with the risk table; the spec author may write it | requirements the plan marks at risk | one, which writes them and runs verify | the whole-change review, Critical and Important findings only | 2 | spec approval (also the go), merge |
 | medium | several requirements, or one repo with moderate risk | full | short, with the risk table; the spec author may write it | requirements the plan marks at risk | a test-writing task, verify, and a suggestions task when one is routed | one per wave when there is more than one wave, and the whole-change review | 3 | spec approval (also the go), merge |
 | large | several repos, an interface or data-format change, anything costly to get wrong | full | full, by a fresh planner, with the risk and expensive-runs tables | requirements the plan marks at risk | as medium | one per wave, one per build task marked at risk, and the whole-change review | 3 | spec approval, plan skim, merge |
@@ -1089,8 +1087,8 @@ per
 task (§5).
 
 - A change is small unless its approved spec says another size. Trivial
-  is below the default, only when the operator asks for it; the spec
-  author never suggests it, and the pod still runs. The spec
+  is below the default: the spec author may suggest it, and a change is
+  trivial only when the operator confirms it. The spec
   author states the size it suggests and the reason in Open calls and asks
   the operator to confirm or name another (§3). The signs to suggest more
   than small: more than one repo, an interface or data-format change, well
